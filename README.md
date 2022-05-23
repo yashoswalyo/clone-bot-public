@@ -5,10 +5,8 @@
 2. use this template make private repo <br>
 3. add accounts folder and token.pickle <br>
 
-<br>
-Tutorial Video from A to Z:<br>
-Thanks to Wiszky
-https://www.youtube.com/watch?v=gFQWJ4ftt48
+<br> Tutorial
+<p><a href="https://youtu.be/ZK4e7n1jEE0"> <img src="https://img.shields.io/badge/See%20Video-black?style=for-the-badge&logo=YouTube" width="160""/></a></p>
 
 #### Note: 
 Aria2p is removed so leech/mirror on direct links and magnets will not work <br>
