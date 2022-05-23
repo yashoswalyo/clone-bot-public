@@ -6,12 +6,13 @@
 3. add accounts folder and token.pickle <br>
 
 <br>
-Tutorial Video from A to Z:<br>p
+Tutorial Video from A to Z:<br>
 Thanks to Wiszky
 https://www.youtube.com/watch?v=gFQWJ4ftt48
 
 #### Note: 
-
+Aria2p is removed so leech/mirror on direct links and magnets will not work <br>
+btw you can leech from google drive
 
 ### Add this secrets
 - `HEROKU_API_KEY`
