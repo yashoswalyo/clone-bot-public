@@ -1,14 +1,14 @@
-# clone bot
-## This repo is lite version of <a href="https://github.com/anasty17/mirror-leech-telegram-bot">MLTB</a>
+# CLONE BOT
+### This repo is lite version of <a href="https://github.com/anasty17/mirror-leech-telegram-bot">MLTB</a>
 
 1. fill config.env on gist <br>
 2. use this template make private repo <br>
 3. add accounts folder and token.pickle <br>
 
-## Tutorial
+### Tutorial
 <p><a href="https://youtu.be/ZK4e7n1jEE0"> <img src="https://img.shields.io/badge/See%20Video-red?style=for-the-badge&logo=YouTube" width="160""/></a></p>
 
-## Note: 
+### Note: 
 Aria2p is removed so leech/mirror for direct links and magnets will not work <br>
 btw you can leech from google drive
 
@@ -56,4 +56,4 @@ btw you can leech from google drive
 goto actions and run workflow
 
 # Modified By:
-@yashoswalyo (https://github.com/yashoswalyo)
+Yash Oswal (https://github.com/yashoswalyo)
