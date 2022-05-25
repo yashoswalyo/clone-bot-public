@@ -64,7 +64,7 @@ def _clone(message, bot, multi=0):
     is_drivefire = is_drivefire_link(link)
     if (is_gdtot or is_appdrive or is_gdflix or is_driveapp or is_driveace or is_drivelinks or is_drivebit or is_drivesharer or is_hubdrive or is_drivehub or is_katdrive or is_kolop or is_drivefire):
         try:
-            sendMessage("Processing: <code>{link}</code> ", bot, message)
+            msg = sendMessage(f"<b>Processing:</b> <code>{link}</code>", bot, message)
             LOGGER.info(f"Processing: {link}")
             if is_appdrive:
                 link = unified(link)
@@ -92,9 +92,9 @@ def _clone(message, bot, multi=0):
                 link = udrive(link)
             if is_drivefire:
                 link = udrive(link)
-            deleteMessage(bot, message)
+            deleteMessage(bot, msg)
         except DirectDownloadLinkException as e:
-            deleteMessage(bot, message=message)
+            deleteMessage(bot, msg)
             return sendMessage(str(e), bot, message)
     if is_gdrive_link(link):
         gd = GoogleDriveHelper()
