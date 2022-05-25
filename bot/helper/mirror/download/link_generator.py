@@ -186,5 +186,6 @@ def udrive(url: str) -> str:
     
     info_parsed['gdrive_url'] = f"https://drive.google.com/open?id={gd_id}"
     info_parsed['src_url'] = url
-
-    return info_parsed['gdrive_url']
+    flink = info_parsed['gdrive_url']
+    
+    return flink
