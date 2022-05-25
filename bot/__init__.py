@@ -326,11 +326,11 @@ try:
 except:
     UNIFIED_EMAIL = None
 try:
-    UNIFIED_PASSWORD = getConfig("UNIFIED_PASSWORD")
-    if len(UNIFIED_PASSWORD) == 0:
+    UNIFIED_PASS = getConfig("UNIFIED_PASS")
+    if len(UNIFIED_PASS) == 0:
         raise KeyError
 except:
-    UNIFIED_PASSWORD = None
+    UNIFIED_PASS = None
 try:
     GDTOT_CRYPT = getConfig("GDTOT_CRYPT")
     if len(GDTOT_CRYPT) == 0:
