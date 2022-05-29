@@ -9,7 +9,8 @@
 [![Watch the video](https://img.youtube.com/vi/ZK4e7n1jEE0/hqdefault.jpg)](https://youtu.be/ZK4e7n1jEE0)
 
 ### Note: 
-Aria2p is removed so leech/mirror for direct links and magnets will not work <br>
+- If you are using Service accounts add them to google group and then add google group to shared drive as content manager or watch (https://www.youtube.com/watch?v=gFQWJ4ftt48&t=5034s)
+- Aria2p is removed so leech/mirror for direct links and magnets will not work <br>
 btw you can leech from google drive
 
 ### Features:
