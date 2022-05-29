@@ -19,3 +19,6 @@ urllib3==1.26.5
 wget==3.2
 yt_dlp==2022.5.18
 lxml
+pybase64
+cloudscraper
+beautifulsoup4
