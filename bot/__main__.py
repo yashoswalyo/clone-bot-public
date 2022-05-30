@@ -121,7 +121,7 @@ Type /{BotCommands.HelpCommand} to get a list of available commands
         sendMarkup(start_string, context.bot, update.message, reply_markup)
     else:
         sendMarkup(
-            "Not Authorized user, deploy your own mirror-leech bot",
+            "Not Authorized user, deploy your own clone bot",
             context.bot,
             update.message,
             reply_markup,
