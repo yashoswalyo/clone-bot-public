@@ -271,55 +271,67 @@ def is_gdrive_link(url: str):
 
 
 def is_appdrive_link(url: str):
-    url = re.match(r'https?://(appdrive)\.\S+', url)
+    url = re.match(r"https?://(appdrive)\.\S+", url)
     return bool(url)
+
 
 def is_driveapp_link(url: str):
-    url = re.match(r'https?://(driveapp)\.\S+', url)
+    url = re.match(r"https?://(driveapp)\.\S+", url)
     return bool(url)
+
 
 def is_driveace_link(url: str):
-    url = re.match(r'https?://(driveace)\.\S+', url)
+    url = re.match(r"https?://(driveace)\.\S+", url)
     return bool(url)
+
 
 def is_gdflix_link(url: str):
-    url = re.match(r'https?://(gdflix)\.\S+', url)
+    url = re.match(r"https?://(gdflix)\.\S+", url)
     return bool(url)
+
 
 def is_drivelinks_link(url: str):
-    url = re.match(r'https?://(drivelinks)\.\S+', url)
+    url = re.match(r"https?://(drivelinks)\.\S+", url)
     return bool(url)
+
 
 def is_drivebit_link(url: str):
-    url = re.match(r'https?://(drivebit)\.\S+', url)
+    url = re.match(r"https?://(drivebit)\.\S+", url)
     return bool(url)
+
 
 def is_drivesharer_link(url: str):
-    url = re.match(r'https?://(drivesharer)\.\S+', url)
+    url = re.match(r"https?://(drivesharer)\.\S+", url)
     return bool(url)
+
 
 def is_gdtot_link(url: str):
-    url = re.match(r'https?://.+\.gdtot\.\S+', url)
+    url = re.match(r"https?://.+\.gdtot\.\S+", url)
     return bool(url)
+
 
 def is_hubdrive_link(url: str):
-    url = re.match(r'https?://(hubdrive)\.\S+', url)
+    url = re.match(r"https?://(hubdrive)\.\S+", url)
     return bool(url)
+
 
 def is_drivehub_link(url: str):
-    url = re.match(r'https?://(drivehub)\.\S+', url)
+    url = re.match(r"https?://(drivehub)\.\S+", url)
     return bool(url)
+
 
 def is_katdrive_link(url: str):
-    url = re.match(r'https?://(katdrive)\.\S+', url)
+    url = re.match(r"https?://(katdrive)\.\S+", url)
     return bool(url)
+
 
 def is_kolop_link(url: str):
-    url = re.match(r'https?://(kolop)\.\S+', url)
+    url = re.match(r"https?://(kolop)\.\S+", url)
     return bool(url)
 
+
 def is_drivefire_link(url: str):
-    url = re.match(r'https?://(drivefire)\.\S+', url)
+    url = re.match(r"https?://(drivefire)\.\S+", url)
     return bool(url)
 
 

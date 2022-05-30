@@ -1,3 +1,6 @@
 __pycache__
 config.env
-*.session
+*.session*
+log*
+accounts
+token.pickle

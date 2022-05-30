@@ -18,6 +18,7 @@ btw you can leech from google drive
 - Stop duplicates for all tasks except yt-dlp tasks
 - Zip/Unzip G-Drive links
 - Counting files/folders from Google Drive link
+- Direct Clone from GDToT, AppDrive, DriveApp, DriveLinks, DriveAce, DriveBit, DriveSharer, HubDrive, KatDrive, Kolop, DriveFire Links !
 - View Link button, extra button to open file index link in broswer instead of direct download
 - Status Pages for unlimited tasks
 - Clone status
