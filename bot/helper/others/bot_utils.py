@@ -270,56 +270,16 @@ def is_gdrive_link(url: str):
     return "drive.google.com" in url
 
 
-def is_appdrive_link(url: str):
-    url = re.match(r'https?://(appdrive)\.\S+', url)
-    return bool(url)
-
-def is_driveapp_link(url: str):
-    url = re.match(r'https?://(driveapp)\.\S+', url)
-    return bool(url)
-
-def is_driveace_link(url: str):
-    url = re.match(r'https?://(driveace)\.\S+', url)
-    return bool(url)
-
-def is_gdflix_link(url: str):
-    url = re.match(r'https?://(gdflix)\.\S+', url)
-    return bool(url)
-
-def is_drivelinks_link(url: str):
-    url = re.match(r'https?://(drivelinks)\.\S+', url)
-    return bool(url)
-
-def is_drivebit_link(url: str):
-    url = re.match(r'https?://(drivebit)\.\S+', url)
-    return bool(url)
-
-def is_drivesharer_link(url: str):
-    url = re.match(r'https?://(drivesharer)\.\S+', url)
+def is_unified_link(url: str):
+    url = re.match(r'https?://(appdrive|driveapp|driveace|gdflix|drivelinks|drivebit|drivesharer)\.\S+', url)
     return bool(url)
 
 def is_gdtot_link(url: str):
     url = re.match(r'https?://.+\.gdtot\.\S+', url)
     return bool(url)
 
-def is_hubdrive_link(url: str):
-    url = re.match(r'https?://(hubdrive)\.\S+', url)
-    return bool(url)
-
-def is_drivehub_link(url: str):
-    url = re.match(r'https?://(drivehub)\.\S+', url)
-    return bool(url)
-
-def is_katdrive_link(url: str):
-    url = re.match(r'https?://(katdrive)\.\S+', url)
-    return bool(url)
-
-def is_kolop_link(url: str):
-    url = re.match(r'https?://(kolop)\.\S+', url)
-    return bool(url)
-
-def is_drivefire_link(url: str):
-    url = re.match(r'https?://(drivefire)\.\S+', url)
+def is_udrive_link(url: str):
+    url = re.match(r'https?://(hubdrive|drivehub|katdrive|kolop|drivefire)\.\S+', url)
     return bool(url)
 
 
