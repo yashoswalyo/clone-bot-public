@@ -320,6 +320,18 @@ try:
 except:
     CUSTOM_FILENAME = None
 try:
+    XSRF_TOKEN = getConfig("XSRF_TOKEN")
+    if len(XSRF_TOKEN) == 0:
+        raise KeyError
+except:
+    XSRF_TOKEN = None
+try:
+    laravel_session = getConfig("laravel_session")
+    if len(laravel_session) == 0:
+        raise KeyError
+except:
+    laravel_session = None
+try:
     UNIFIED_EMAIL = getConfig("UNIFIED_EMAIL")
     if len(UNIFIED_EMAIL) == 0:
         raise KeyError
