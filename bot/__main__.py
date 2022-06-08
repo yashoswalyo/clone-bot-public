@@ -111,7 +111,7 @@ def start(update, context):
     buttons.buildbutton(
         "Repo", "https://www.github.com/yashoswalyo/clone-bot-public"
     )
-    buttons.buildbutton("Report Group", "https://t.me/itzTgDiscussGroup")
+    buttons.buildbutton("Report Group", "https://t.me/yash_codes_support")
     reply_markup = InlineKeyboardMarkup(buttons.build_menu(2))
     if CustomFilters.authorized_user(update) or CustomFilters.authorized_chat(update):
         start_string = f"""
