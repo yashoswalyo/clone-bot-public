@@ -347,8 +347,11 @@ class GoogleDriveHelper:
         retry=retry_if_exception_type(HttpError),
         before=before_log(LOGGER, DEBUG),
     )
-    def __copyFile(self, file_id, dest_id):
-        body = {"parents": [dest_id]}
+    def __copyFile(self, file_id, dest_id, new_name):
+        body = {
+            "parents": [dest_id],
+            "name": new_name
+        }
 
         try:
             return (
@@ -372,7 +375,7 @@ class GoogleDriveHelper:
                             raise err
                         else:
                             self.__switchServiceAccount()
-                            return self.__copyFile(file_id, dest_id)
+                            return self.__copyFile(file_id, dest_id, new_name)
                     else:
                         self.is_cancelled = True
                         LOGGER.error(f"Got: {reason}")
@@ -423,7 +426,7 @@ class GoogleDriveHelper:
                 break
         return files
 
-    def clone(self, link):
+    def clone(self, link, new_name):
         self.is_cloning = True
         self.start_time = time()
         self.__total_files = 0
@@ -467,7 +470,7 @@ class GoogleDriveHelper:
                     url = short_url(url)
                     buttons.buildbutton("⚡ Index Link", url)
             else:
-                file = self.__copyFile(meta.get("id"), parent_id)
+                file = self.__copyFile(meta.get("id"), parent_id, new_name)
                 msg += f'<b>Name: </b><code>{file.get("name")}</code>'
                 durl = self.__G_DRIVE_BASE_DOWNLOAD_URL.format(file.get("id"))
                 buttons = ButtonMaker()
@@ -527,7 +530,7 @@ class GoogleDriveHelper:
             elif not file.get("name").lower().endswith(tuple(EXTENTION_FILTER)):
                 self.__total_files += 1
                 self.transferred_size += int(file.get("size", 0))
-                self.__copyFile(file.get("id"), parent_id)
+                self.__copyFile(file.get("id"), parent_id, file.get("name"))
             if self.is_cancelled:
                 break
 

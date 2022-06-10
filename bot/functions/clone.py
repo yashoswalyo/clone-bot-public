@@ -30,9 +30,15 @@ from bot.helper.others.exceptions import DirectDownloadLinkException
 
 
 def _clone(message, bot, multi=0):
-    arguments = message.text.split(" ", maxsplit=1)
+    temp = message.text.split(" |", maxsplit=1)
+    arguments = temp[0].split(" ")
     reply_to = message.reply_to_message
     link = ""
+    try:
+        new_name = temp[1]
+        new_name = new_name.strip()
+    except Exception:
+        new_name = ""
     if len(arguments) > 1:
         link = arguments[1]
         if link.isdigit():
@@ -62,8 +68,7 @@ def _clone(message, bot, multi=0):
     is_katdrive = is_katdrive_link(link)
     is_kolop = is_kolop_link(link)
     is_drivefire = is_drivefire_link(link)
-    is_sharer = is_sharer_link(link)
-    if (is_gdtot or is_appdrive or is_gdflix or is_driveapp or is_driveace or is_drivelinks or is_drivebit or is_drivesharer or is_hubdrive or is_drivehub or is_katdrive or is_kolop or is_drivefire or is_sharer):
+    if (is_gdtot or is_appdrive or is_gdflix or is_driveapp or is_driveace or is_drivelinks or is_drivebit or is_drivesharer or is_hubdrive or is_drivehub or is_katdrive or is_kolop or is_drivefire):
         try:
             msg = sendMessage(f"<b>Processing:</b> <code>{link}</code>", bot, message)
             LOGGER.info(f"Processing: {link}")
@@ -93,8 +98,6 @@ def _clone(message, bot, multi=0):
                 link = udrive(link)
             if is_drivefire:
                 link = udrive(link)
-            if is_sharer:
-                link = sharer_pw(link)
             deleteMessage(bot, msg)
         except DirectDownloadLinkException as e:
             deleteMessage(bot, msg)
@@ -102,6 +105,8 @@ def _clone(message, bot, multi=0):
     if is_gdrive_link(link):
         gd = GoogleDriveHelper()
         res, size, name, files = gd.helper(link)
+        if new_name:
+            name = new_name
         if res != "":
             return sendMessage(res, bot, message)
         if STOP_DUPLICATE:
@@ -132,7 +137,7 @@ def _clone(message, bot, multi=0):
             Thread(target=_clone, args=(nextmsg, bot, multi)).start()
         if files <= 20:
             msg = sendMessage(f"Cloning: <code>{link}</code>", bot, message)
-            result, button = gd.clone(link)
+            result, button = gd.clone(link, name)
             deleteMessage(bot, msg)
         else:
             drive = GoogleDriveHelper(name)
@@ -141,7 +146,7 @@ def _clone(message, bot, multi=0):
             with download_dict_lock:
                 download_dict[message.message_id] = clone_status
             sendStatusMessage(message, bot)
-            result, button = drive.clone(link)
+            result, button = drive.clone(link, name)
             with download_dict_lock:
                 del download_dict[message.message_id]
                 count = len(download_dict)
@@ -160,11 +165,11 @@ def _clone(message, bot, multi=0):
         else:
             sendMarkup(result + cc, bot, message, button)
             LOGGER.info(f"Cloning Done: {name}")
-        if (is_gdtot or is_appdrive or is_gdflix or is_driveapp or is_driveace or is_drivelinks or is_drivebit or is_drivesharer or is_hubdrive or is_drivehub or is_katdrive or is_kolop or is_drivefire or is_sharer):
+        if (is_gdtot or is_appdrive or is_gdflix or is_driveapp or is_driveace or is_drivelinks or is_drivebit or is_drivesharer or is_hubdrive or is_drivehub or is_katdrive or is_kolop or is_drivefire):
             gd.deletefile(link)
     else:
         sendMessage(
-            "Send Gdrive or GDToT/AppDrive/DriveApp/GDFlix/DriveAce/DriveLinks/DriveBit/DriveSharer/HubDrive/DriveHub/KatDrive/Kolop/DriveFire/SharerPw Link along with command or by replying to the link by command",
+            "Send Gdrive or GDToT/AppDrive/DriveApp/GDFlix/DriveAce/DriveLinks/DriveBit/DriveSharer/HubDrive/DriveHub/KatDrive/Kolop/DriveFire Link along with command or by replying to the link by command",
             bot,
             message,
         )
