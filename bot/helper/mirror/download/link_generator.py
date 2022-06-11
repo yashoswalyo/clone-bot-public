@@ -122,8 +122,8 @@ def unified(url: str) -> str:
     else:
         info_parsed["error"] = True
         info_parsed["error_message"] = "Something went wrong :("
-        
-    if info_parsed['error']:
+
+    if info_parsed["error"]:
         raise DirectDownloadLinkException(f"ERROR! {info_parsed['error_message']}")
 
     if urlparse(url).netloc == "appdrive.in" and not info_parsed["error"]:
@@ -206,7 +206,9 @@ def udrive(url: str) -> str:
     try:
         res = client.post(req_url, headers=headers, data=data).json()["file"]
     except:
-        raise DirectDownloadLinkException("ERROR! File Not Found or User rate exceeded !!")
+        raise DirectDownloadLinkException(
+            "ERROR! File Not Found or User rate exceeded !!"
+        )
 
     if "drivefire.co" in url:
         return res
@@ -218,61 +220,62 @@ def udrive(url: str) -> str:
 
     return info_parsed["gdrive_url"]
 
+
 def parse_info(res):
     f = re.findall(">(.*?)<\/td>", res.text)
     info_parsed = {}
     for i in range(0, len(f), 3):
-        info_parsed[f[i].lower().replace(' ', '_')] = f[i+2]
+        info_parsed[f[i].lower().replace(" ", "_")] = f[i + 2]
     return info_parsed
 
+
 def sharer_pw_dl(url, forced_login=False):
-    client = cloudscraper.create_scraper(delay=10, browser='chrome')
-    
-    client.cookies.update({
-        "XSRF-TOKEN": XSRF_TOKEN,
-        "laravel_session": laravel_session
-    })
-    
+    client = cloudscraper.create_scraper(delay=10, browser="chrome")
+
+    client.cookies.update(
+        {"XSRF-TOKEN": XSRF_TOKEN, "laravel_session": laravel_session}
+    )
+
     res = client.get(url)
     token = re.findall("token\s=\s'(.*?)'", res.text, re.DOTALL)[0]
-    
+
     ddl_btn = etree.HTML(res.content).xpath("//button[@id='btndirect']")
-    
+
     info_parsed = parse_info(res)
-    info_parsed['error'] = True
-    info_parsed['src_url'] = url
-    info_parsed['link_type'] = 'login' # direct/login
-    info_parsed['forced_login'] = forced_login
-    
+    info_parsed["error"] = True
+    info_parsed["src_url"] = url
+    info_parsed["link_type"] = "login"  # direct/login
+    info_parsed["forced_login"] = forced_login
+
     headers = {
-        'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
-        'x-requested-with': 'XMLHttpRequest'
+        "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+        "x-requested-with": "XMLHttpRequest",
     }
-    
-    data = {
-        '_token': token
-    }
-    
+
+    data = {"_token": token}
+
     if len(ddl_btn):
-        info_parsed['link_type'] = 'direct'
+        info_parsed["link_type"] = "direct"
     if not forced_login:
-        data['nl'] = 1
-    
-    try: 
-        res = client.post(url+'/dl', headers=headers, data=data).json()
+        data["nl"] = 1
+
+    try:
+        res = client.post(url + "/dl", headers=headers, data=data).json()
     except:
         return info_parsed
-    
-    if 'url' in res and res['url']:
-        info_parsed['error'] = False
-        info_parsed['gdrive_link'] = res['url']
-    
-    if len(ddl_btn) and not forced_login and not 'url' in info_parsed:
+
+    if "url" in res and res["url"]:
+        info_parsed["error"] = False
+        info_parsed["gdrive_link"] = res["url"]
+
+    if len(ddl_btn) and not forced_login and not "url" in info_parsed:
         # retry download via login
         return sharer_pw_dl(url, forced_login=True)
-    
+
     try:
-        flink = info_parsed['gdrive_link']
+        flink = info_parsed["gdrive_link"]
         return flink
     except:
-        raise DirectDownloadLinkException("ERROR! File Not Found or User rate exceeded !!")
+        raise DirectDownloadLinkException(
+            "ERROR! File Not Found or User rate exceeded !!"
+        )
