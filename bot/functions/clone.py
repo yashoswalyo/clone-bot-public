@@ -100,7 +100,7 @@ def _clone(message, bot, multi=0):
             if is_drivefire:
                 link = udrive(link)
             if is_sharer:
-                link = sharer_pw(link)
+                link = sharer_pw_dl(link)
             deleteMessage(bot, msg)
         except DirectDownloadLinkException as e:
             deleteMessage(bot, msg)
