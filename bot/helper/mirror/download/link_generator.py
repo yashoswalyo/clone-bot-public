@@ -206,7 +206,7 @@ def udrive(url: str) -> str:
     try:
         res = client.post(req_url, headers=headers, data=data).json()["file"]
     except:
-        return {"error": True, "src_url": url}
+        raise DirectDownloadLinkException("ERROR! File Not Found or User rate exceeded !!")
 
     if "drivefire.co" in url:
         return res
@@ -271,4 +271,8 @@ def sharer_pw_dl(url, forced_login=False):
         # retry download via login
         return sharer_pw_dl(url, forced_login=True)
     
-    return info_parsed['gdrive_link']
+    try:
+        flink = info_parsed['gdrive_link']
+        return flink
+    except:
+        raise DirectDownloadLinkException("ERROR! File Not Found or User rate exceeded !!")
