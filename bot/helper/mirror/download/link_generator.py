@@ -206,7 +206,7 @@ def udrive(url: str) -> str:
     try:
         res = client.post(req_url, headers=headers, data=data).json()["file"]
     except:
-        return {"error": True, "src_url": url}
+        raise DirectDownloadLinkException("ERROR! File Not Found or User rate exceeded !!")
 
     if "drivefire.co" in url:
         return res
