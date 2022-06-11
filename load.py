@@ -4,6 +4,10 @@ from dotenv import load_dotenv
 from logging import basicConfig, FileHandler, StreamHandler, INFO, error as log_error, info as log_info
 from requests import get as rget
 
+if ospath.exists('log.txt'):
+    with open('log.txt', 'r+') as f:
+        f.truncate(0)
+
 basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     handlers=[FileHandler("log.txt"), StreamHandler()],
