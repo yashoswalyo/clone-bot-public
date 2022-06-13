@@ -473,12 +473,6 @@ def _mirror(
         help_msg += (
             "\n<code>/command</code> {link} |newname pswd: xx\nusername\npassword"
         )
-        help_msg += "\n\n<b>Qbittorrent selection:</b>"
-        help_msg += (
-            "\n<code>/qbcommand</code> <b>s</b> {link} or by replying to {file/link}"
-        )
-        help_msg += "\n\n<b>Multi links only by replying to first link or file:</b>"
-        help_msg += "\n<code>/command</code> 10(number of links/files)"
         return sendMessage(help_msg, bot, message)
 
     LOGGER.info(link)
