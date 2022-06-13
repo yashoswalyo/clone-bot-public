@@ -112,6 +112,13 @@ except:
     LOGGER.error("One or more env variables missing! Exiting now")
     exit(1)
 
+try:
+    CHANNEL_ID = getConfig("CHANNEL_ID")
+    if CHANNEL_ID.isdecimal():
+        CHANNEL_ID = int(CHANNEL_ID)
+except:
+    CHANNEL_ID = None
+
 LOGGER.info("Generating BOT_STRING_SESSION")
 app = Client(
     name="pyrogram",
