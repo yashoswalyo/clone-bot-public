@@ -14,6 +14,8 @@
 btw you can leech from google drive
 
 ### Features:
+- Log channel support
+- Change filename while cloning, ex: `/clone <drive_url> |new file name.ext`
 - Leech drive links (splitting, thumbnail for each user, setting as document or as media for each user)
 - Stop duplicates for all tasks except yt-dlp tasks
 - Zip/Unzip G-Drive links
@@ -35,7 +37,7 @@ btw you can leech from google drive
 - Extenstion Filter for uploading/cloning files
 - Incomplete task notifier to get incomplete task messages after restart, works with database.
 - Mirror Telegram files to Google Drive
-- Copy files from someone's Drive to your Drive 
+- Copy files from someone's Drive to your Drive
 - Download/Upload progress, Speeds and ETAs
 - Mirror all yt-dlp supported links
 - Uploading to Team Drive
