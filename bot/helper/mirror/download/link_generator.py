@@ -150,6 +150,12 @@ def parse_info(res, url):
     info_parsed = {}
     if 'drivebuzz' in url:
         info_chunks = re_findall('<td\salign="right">(.*?)<\/td>', res.text)
+    elif 'sharer.pw' in url:
+        f = re.findall(">(.*?)<\/td>", res.text)
+        info_parsed = {}
+        for i in range(0, len(f), 3):
+            info_parsed[f[i].lower().replace(" ", "_")] = f[i + 2]
+        return info_parsed
     else:
         info_chunks = re.findall(">(.*?)<\/td>", res.text)
     for i in range(0, len(info_chunks), 2):
@@ -211,14 +217,7 @@ def udrive(url: str) -> str:
     flink = info_parsed['gdrive_url']
 
     return flink
-
-
-def parse_info(res):
-    f = re.findall(">(.*?)<\/td>", res.text)
-    info_parsed = {}
-    for i in range(0, len(f), 3):
-        info_parsed[f[i].lower().replace(" ", "_")] = f[i + 2]
-    return info_parsed
+    
 
 
 def sharer_pw_dl(url, forced_login=False):
@@ -233,7 +232,7 @@ def sharer_pw_dl(url, forced_login=False):
 
     ddl_btn = etree.HTML(res.content).xpath("//button[@id='btndirect']")
 
-    info_parsed = parse_info(res)
+    info_parsed = parse_info(res, url)
     info_parsed["error"] = True
     info_parsed["src_url"] = url
     info_parsed["link_type"] = "login"  # direct/login
