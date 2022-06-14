@@ -16,7 +16,6 @@ import lxml
 from lxml import etree
 from urllib.parse import urlparse, parse_qs
 import requests
-from bs4 import BeautifulSoup
 
 
 def gdtot(url: str) -> str:
@@ -79,7 +78,7 @@ def unified(url: str) -> str:
         raise DirectDownloadLinkException(
             "UNIFIED_EMAIL and UNIFIED_PASS env vars not provided"
         )
-    client = requests.Session()
+    client = cloudscraper.create_scraper(delay=10, browser='chrome')
     client.headers.update(
         {
             "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36"
@@ -126,11 +125,11 @@ def unified(url: str) -> str:
     if info_parsed["error"]:
         raise DirectDownloadLinkException(f"ERROR! {info_parsed['error_message']}")
 
-    if urlparse(url).netloc == "appdrive.in" and not info_parsed["error"]:
+    if urlparse(url).netloc == "appdrive.in":
         flink = info_parsed["gdrive_link"]
         return flink
 
-    if urlparse(url).netloc == "driveapp.in" and not info_parsed["error"]:
+    elif urlparse(url).netloc == "driveapp.in":
         res = client.get(info_parsed["gdrive_link"])
         drive_link = etree.HTML(res.content).xpath("//a[contains(@class,'btn')]/@href")[
             0
@@ -138,48 +137,28 @@ def unified(url: str) -> str:
         flink = drive_link
         return flink
 
-    if urlparse(url).netloc == "drivesharer.in" and not info_parsed["error"]:
+    else:
         res = client.get(info_parsed["gdrive_link"])
         drive_link = etree.HTML(res.content).xpath(
             "//a[contains(@class,'btn btn-primary')]/@href"
         )[0]
         flink = drive_link
         return flink
+    
 
-    if urlparse(url).netloc == "drivebit.in" and not info_parsed["error"]:
-        res = client.get(info_parsed["gdrive_link"])
-        drive_link = etree.HTML(res.content).xpath(
-            "//a[contains(@class,'btn btn-primary')]/@href"
-        )[0]
-        flink = drive_link
-        return flink
-
-    if urlparse(url).netloc == "driveace.in" and not info_parsed["error"]:
-        res = client.get(info_parsed["gdrive_link"])
-        drive_link = etree.HTML(res.content).xpath(
-            "//a[contains(@class,'btn btn-primary')]/@href"
-        )[0]
-        flink = drive_link
-        return flink
-
-    flink = info_parsed["gdrive_link"]
-    info_parsed["src_url"] = url
-
-    return flink
-
-
-def parse_info(res):
+def parse_info(res, url):
     info_parsed = {}
-    title = re.findall(">(.*?)<\/h4>", res.text)[0]
-    info_chunks = re.findall(">(.*?)<\/td>", res.text)
-    info_parsed["title"] = title
+    if 'drivebuzz' in url:
+        info_chunks = re_findall('<td\salign="right">(.*?)<\/td>', res.text)
+    else:
+        info_chunks = re.findall(">(.*?)<\/td>", res.text)
     for i in range(0, len(info_chunks), 2):
         info_parsed[info_chunks[i]] = info_chunks[i + 1]
     return info_parsed
 
 
 def udrive(url: str) -> str:
-    client = requests.Session()
+    client = cloudscraper.create_scraper(delay=10, browser='chrome')
     if "hubdrive" in url:
         client.cookies.update({"crypt": HUBDRIVE_CRYPT})
     if "drivehub" in url:
@@ -190,8 +169,10 @@ def udrive(url: str) -> str:
         client.cookies.update({"crypt": KATDRIVE_CRYPT})
     if "drivefire" in url:
         client.cookies.update({"crypt": DRIVEFIRE_CRYPT})
+    if "drivebuzz" in url:
+        client.cookies.update({"crypt": DRIVEFIRE_CRYPT})
     res = client.get(url)
-    info_parsed = parse_info(res)
+    info_parsed = parse_info(res, url)
     info_parsed["error"] = False
 
     up = urlparse(url)
@@ -210,15 +191,26 @@ def udrive(url: str) -> str:
             "ERROR! File Not Found or User rate exceeded !!"
         )
 
-    if "drivefire.co" in url:
-        return res
+    if 'drivefire' in url:
+        decoded_id = res.rsplit('/', 1)[-1]
+        flink = f"https://drive.google.com/file/d/{decoded_id}"
+        return flink
+    elif 'drivehub' in url:
+        gd_id = res.rsplit("=", 1)[-1]
+        flink = f"https://drive.google.com/open?id={gd_id}"
+        return flink
+    elif 'drivebuzz' in url:
+        gd_id = res.rsplit("=", 1)[-1]
+        flink = f"https://drive.google.com/open?id={gd_id}"
+        return flink
     else:
-        gd_id = re.findall("gd=(.*)", res, re.DOTALL)[0]
+        gd_id = re.findall('gd=(.*)', res, re.DOTALL)[0]
 
     info_parsed["gdrive_url"] = f"https://drive.google.com/open?id={gd_id}"
     info_parsed["src_url"] = url
+    flink = info_parsed['gdrive_url']
 
-    return info_parsed["gdrive_url"]
+    return flink
 
 
 def parse_info(res):
