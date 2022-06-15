@@ -128,6 +128,10 @@ def unified(url: str) -> str:
     if urlparse(url).netloc == "appdrive.in":
         flink = info_parsed["gdrive_link"]
         return flink
+    
+    elif urlparse(url).netloc == "gdflix.pro":
+        flink = info_parsed["gdrive_link"]
+        return flink
 
     elif urlparse(url).netloc == "driveapp.in":
         res = client.get(info_parsed["gdrive_link"])
@@ -164,7 +168,10 @@ def parse_info(res, url):
 
 
 def udrive(url: str) -> str:
-    client = cloudscraper.create_scraper(delay=10, browser='chrome')
+    if 'katdrive' in url:
+        client = requests.Session()
+    else:
+        client = cloudscraper.create_scraper(delay=10, browser='chrome')
     if "hubdrive" in url:
         client.cookies.update({"crypt": HUBDRIVE_CRYPT})
     if "drivehub" in url:
@@ -221,8 +228,9 @@ def udrive(url: str) -> str:
 
 
 def sharer_pw_dl(url, forced_login=False):
+    
     client = cloudscraper.create_scraper(delay=10, browser="chrome")
-
+    
     client.cookies.update(
         {"XSRF-TOKEN": XSRF_TOKEN, "laravel_session": laravel_session}
     )
