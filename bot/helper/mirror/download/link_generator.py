@@ -221,8 +221,11 @@ def udrive(url: str) -> str:
 
 
 def sharer_pw_dl(url, forced_login=False):
-    client = cloudscraper.create_scraper(delay=10, browser="chrome")
-
+    if 'katdrive' in url:
+        client = requests.Session()
+    else:
+        client = cloudscraper.create_scraper(delay=10, browser="chrome")
+    
     client.cookies.update(
         {"XSRF-TOKEN": XSRF_TOKEN, "laravel_session": laravel_session}
     )
