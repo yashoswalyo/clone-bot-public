@@ -16,7 +16,6 @@ RUN apt-get -y update && DEBIAN_FRONTEND="noninteractive" \
     && echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list
     
 RUN apt-get update && apt-get -y install google-chrome-stable
-RUN chmod 755 geckodriver
     
 ENV LANG="en_US.UTF-8" LANGUAGE="en_US:en"
 
