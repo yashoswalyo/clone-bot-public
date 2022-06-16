@@ -295,6 +295,9 @@ def is_sharer_link(url: str):
     url = re.match(r'https?://(sharer)\.pw/\S+', url)
     return bool(url)
 
+def is_drivehubs_link(url: str):
+    return 'drivehubs.xyz' in url
+
 
 def is_mega_link(url: str):
     return "mega.nz" in url or "mega.co.nz" in url
