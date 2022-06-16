@@ -10,9 +10,13 @@ from bot import (
 )
 from bot.helper.others.exceptions import DirectDownloadLinkException
 import re
+import os
+from time import sleep
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+
 import base64
 import cloudscraper
-import lxml
 from lxml import etree
 from urllib.parse import urlparse, parse_qs
 import requests
@@ -278,3 +282,23 @@ def sharer_pw_dl(url, forced_login=False):
         raise DirectDownloadLinkException(
             "ERROR! File Not Found or User rate exceeded !!"
         )
+        
+def drivehubs(url: str) -> str:
+    os.chmod('/usr/src/app/chromedriver', 755)
+    chrome_options = webdriver.ChromeOptions()
+    chrome_options.add_argument('--headless')
+    chrome_options.add_argument('--no-sandbox')
+    chrome_options.add_argument('--disable-dev-shm-usage')
+    wd = webdriver.Chrome('/usr/src/app/chromedriver', chrome_options=chrome_options)
+    
+    Ok = wd.get(url)
+    wd.find_element(By.XPATH, '//button[@id="fast"]').click()
+    sleep(10)
+    wd.switch_to.window(wd.window_handles[-1])
+    flink = wd.current_url
+    wd.close()
+    
+    if 'drive.google.com' in flink:
+      return flink
+    else:
+      raise DirectDownloadLinkException(f"ERROR! Maybe Direct Download is not working for this file !\n Retrived URL : {flink}")
