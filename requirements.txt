@@ -20,3 +20,4 @@ wget==3.2
 yt_dlp==2022.5.18
 lxml
 cloudscraper
+selenium
