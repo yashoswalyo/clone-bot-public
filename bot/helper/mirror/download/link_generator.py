@@ -132,10 +132,6 @@ def unified(url: str) -> str:
     if urlparse(url).netloc == "appdrive.in":
         flink = info_parsed["gdrive_link"]
         return flink
-    
-    elif urlparse(url).netloc == "gdflix.pro":
-        flink = info_parsed["gdrive_link"]
-        return flink
 
     elif urlparse(url).netloc == "driveapp.in":
         res = client.get(info_parsed["gdrive_link"])
