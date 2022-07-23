@@ -4,7 +4,12 @@ from json import loads as jsnloads
 from sys import exit as sysexit
 from os import remove as osremove, path as ospath, mkdir, walk, listdir, rmdir, makedirs
 from bot.helper.others.exceptions import NotSupportedExtractionArchive
-from bot import TG_SPLIT_SIZE, EQUAL_SPLITS, STORAGE_THRESHOLD
+from bot import TG_SPLIT_SIZE, EQUAL_SPLITS, STORAGE_THRESHOLD, IS_PREMIUM_USER
+
+if IS_PREMIUM_USER:
+    MAX_SPLIT_SIZE = 4194304000
+else:
+    MAX_SPLIT_SIZE = 2097152000
 
 VIDEO_SUFFIXES = ("M4V", "MP4", "MOV", "FLV", "WMV", "3GP", "MPG", "WEBM", "MKV", "AVI")
 
@@ -158,7 +163,7 @@ def split(path, size, file_, dirpath, split_size, start_time=0, i=1, inLoop=Fals
         split_size = ceil(size / parts) + 1000
     if file_.upper().endswith(VIDEO_SUFFIXES):
         base_name, extension = ospath.splitext(file_)
-        split_size = split_size - 2500000
+        split_size = split_size - 5000000
         while i <= parts:
             parted_name = "{}.part{}{}".format(
                 str(base_name), str(i).zfill(3), str(extension)
@@ -186,9 +191,9 @@ def split(path, size, file_, dirpath, split_size, start_time=0, i=1, inLoop=Fals
                 ]
             )
             out_size = get_path_size(out_path)
-            if out_size > 2097152000:
-                dif = out_size - 2097152000
-                split_size = split_size - dif + 2500000
+            if out_size > MAX_SPLIT_SIZE:
+                dif = out_size - MAX_SPLIT_SIZE
+                split_size = split_size - dif + 5000000
                 osremove(out_path)
                 return split(
                     path, size, file_, dirpath, split_size, start_time, i, inLoop=True
