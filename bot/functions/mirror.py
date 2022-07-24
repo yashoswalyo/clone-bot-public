@@ -34,6 +34,10 @@ from bot.helper.others.bot_utils import (
     is_url,
     is_magnet,
     is_gdtot_link,
+    is_unified_link,
+    is_udrive_link,
+    is_sharer_link,
+    is_drivehubs_link,
     is_mega_link,
     is_gdrive_link,
     get_content_type,
@@ -49,6 +53,8 @@ from bot.helper.others.exceptions import (
     DirectDownloadLinkException,
     NotSupportedExtractionArchive,
 )
+
+from bot.helper.mirror.download.link_generator import direct_link_generator
 from bot.helper.mirror.download.gd_downloader import add_gd_download
 from bot.helper.mirror.download.telegram_downloader import TelegramDownloadHelper
 from bot.helper.mirror.status.extract_status import ExtractStatus
@@ -374,6 +380,11 @@ def _mirror(
     name_args = mesg[0].split("|", maxsplit=1)
     qbitsel = False
     is_gdtot = False
+    is_unified = False
+    is_udrive = False
+    is_sharer = False
+    is_drivehubs = False
+    
     try:
         link = message_args[1]
         if link.startswith("s ") or link == "s":
@@ -482,6 +493,24 @@ def _mirror(
         return sendMessage(help_msg, bot, message)
 
     LOGGER.info(link)
+    
+    if not is_mega_link(link) and not isQbit and not is_magnet(link) \
+        and not is_gdrive_link(link) and not link.endswith('.torrent'):
+        content_type = get_content_type(link)
+        if content_type is None or re_match(r'text/html|text/plain', content_type):
+            try:
+                is_gdtot = is_gdtot_link(link)
+                is_unified = is_unified_link(link)
+                is_udrive = is_udrive_link(link)
+                is_sharer = is_sharer_link(link)
+                is_drivehubs = is_drivehubs_link(link)
+                link = direct_link_generator(link)
+                LOGGER.info(f"Generated link: {link}")
+            except DirectDownloadLinkException as e:
+                LOGGER.info(str(e))
+                if str(e).startswith('ERROR:'):
+                    return sendMessage(str(e), bot, message)
+        
 
     listener = MirrorListener(bot, message, isZip, extract, isQbit, isLeech, pswd, tag)
 
@@ -494,7 +523,7 @@ def _mirror(
             gmsg += f"Use /{BotCommands.UnzipMirrorCommand} to extracts Google Drive archive file"
             sendMessage(gmsg, bot, message)
         else:
-            Thread(target=add_gd_download, args=(link, listener, is_gdtot)).start()
+            Thread(target=add_gd_download, args=(link, listener, is_gdtot, is_unified, is_udrive, is_sharer, is_drivehubs)).start()
 
     if multi > 1:
         sleep(3)
