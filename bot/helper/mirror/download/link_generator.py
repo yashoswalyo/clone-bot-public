@@ -8,6 +8,7 @@ from bot import (
     XSRF_TOKEN,
     laravel_session,
 )
+from from bot.helper.ext_utils.bot_utils import *
 from bot.helper.others.exceptions import DirectDownloadLinkException
 import re
 import os
@@ -21,6 +22,19 @@ from lxml import etree
 from urllib.parse import urlparse, parse_qs
 import requests
 
+def direct_link_generator(link: str):
+    if is_gdtot_link(link):
+        return gdtot(link)
+    elif is_unified_link(link):
+        return unified(link)
+    elif is_udrive_link(link):
+        return udrive(link)
+    elif is_sharer_link(link):
+        return sharer_pw_dl(link)
+    elif is_drivehubs_link(link):
+        return drivehubs(link)
+    else:
+        raise DirectDownloadLinkException(f'No Direct link function found for {link}')
 
 def gdtot(url: str) -> str:
     if GDTOT_CRYPT is None:
