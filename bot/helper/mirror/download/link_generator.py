@@ -8,7 +8,7 @@ from bot import (
     XSRF_TOKEN,
     laravel_session,
 )
-from bot.helper.ext_utils.bot_utils import *
+from bot.helper.others.bot_utils import *
 from bot.helper.others.exceptions import DirectDownloadLinkException
 import re
 import os
