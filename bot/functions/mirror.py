@@ -497,7 +497,7 @@ def _mirror(
     if not is_mega_link(link) and not isQbit and not is_magnet(link) \
         and not is_gdrive_link(link) and not link.endswith('.torrent'):
         content_type = get_content_type(link)
-        if content_type is None or match(r'text/html|text/plain', content_type):
+        if content_type is None or re_match(r'text/html|text/plain', content_type):
             try:
                 is_gdtot = is_gdtot_link(link)
                 is_unified = is_unified_link(link)
