@@ -13,7 +13,7 @@ from bot import (
     AS_MEDIA_USERS,
     CUSTOM_FILENAME,
     EXTENTION_FILTER,
-    CHANNEL_ID,
+    CHANNEL_ID
 )
 from bot.helper.others.fs_utils import (
     take_ss,
@@ -134,7 +134,7 @@ class TgUploader:
         notMedia = False
         thumb = self.__thumb
         try:
-            if CHANNEL_ID:
+            if int(CHANNEL_ID):
                 if not self.__as_doc:
                     duration = 0
                     if file_.upper().endswith(VIDEO_SUFFIXES):
@@ -160,7 +160,7 @@ class TgUploader:
                             osrename(up_path, new_path)
                             up_path = new_path
                         self.__sent_msg = self.__client.send_video(
-                            chat_id=CHANNEL_ID,
+                            chat_id=int(CHANNEL_ID),
                             video=up_path,
                             caption=cap_mono,
                             duration=duration,
@@ -175,7 +175,7 @@ class TgUploader:
                     elif file_.upper().endswith(AUDIO_SUFFIXES):
                         duration, artist, title = get_media_info(up_path)
                         self.__sent_msg = self.__client.send_audio(
-                            chat_id=CHANNEL_ID,
+                            chat_id=int(CHANNEL_ID),
                             audio=up_path,
                             caption=cap_mono,
                             duration=duration,
@@ -188,7 +188,7 @@ class TgUploader:
                         )
                     elif file_.upper().endswith(IMAGE_SUFFIXES):
                         self.__sent_msg = self.__client.send_photo(
-                            chat_id=CHANNEL_ID,
+                            chat_id=int(CHANNEL_ID),
                             photo=up_path,
                             caption=cap_mono,
                             disable_notification=True,
@@ -208,7 +208,7 @@ class TgUploader:
                                 osremove(thumb)
                             return
                     self.__sent_msg = self.__client.send_document(
-                        chat_id=CHANNEL_ID,
+                        chat_id=int(CHANNEL_ID),
                         file_name=file_,
                         force_document=True,
                         document=up_path,
