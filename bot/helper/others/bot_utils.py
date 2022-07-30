@@ -6,15 +6,16 @@ from html import escape
 from psutil import virtual_memory, cpu_percent, disk_usage
 from requests import head as rhead
 from urllib.request import urlopen
-from telegram import InlineKeyboardMarkup
-
+from pyrogram.types import InlineKeyboardMarkup
+from pyrogram import Client
+from async_class import AsyncClass
 from bot.helper.tg_helper.list_of_commands import BotCommands
 from bot import (
     download_dict,
     download_dict_lock,
     STATUS_LIMIT,
     botStartTime,
-    DOWNLOAD_DIR,
+    DOWNLOAD_DIR
 )
 from bot.helper.tg_helper.make_buttons import ButtonMaker
 
@@ -43,19 +44,23 @@ class MirrorStatus:
 SIZE_UNITS = ["B", "KB", "MB", "GB", "TB", "PB"]
 
 
-class setInterval:
-    def __init__(self, interval, action):
+class setInterval(AsyncClass):
+    async def __ainit__(self, interval, action):
         self.interval = interval
         self.action = action
         self.stopEvent = Event()
-        thread = Thread(target=self.__setInterval)
-        thread.start()
+        await self.__setInterval()
+        # thread = Thread(target=self.__setInterval)
+        # thread.start()
+    
+    async def _init(self):
+        return await self.__setInterval()
 
-    def __setInterval(self):
+    async def __setInterval(self):
         nextTime = time() + self.interval
         while not self.stopEvent.wait(nextTime - time()):
             nextTime += self.interval
-            self.action()
+            await self.action()
 
     def cancel(self):
         self.stopEvent.set()

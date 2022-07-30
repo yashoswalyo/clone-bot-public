@@ -14,7 +14,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
-from telegram import InlineKeyboardMarkup
+from pyrogram.types import InlineKeyboardMarkup
 from tenacity import (
     retry,
     wait_exponential,
@@ -289,14 +289,15 @@ class GoogleDriveHelper:
         download_url = self.__G_DRIVE_BASE_DOWNLOAD_URL.format(drive_file.get("id"))
         return download_url
 
-    def upload(self, file_name: str):
+    async def upload(self, file_name: str):
         self.is_downloading = False
         self.is_uploading = True
-        file_dir = f"{DOWNLOAD_DIR}{self.__listener.message.message_id}"
+        file_dir = f"{DOWNLOAD_DIR}{self.__listener.m.id}"
         file_path = f"{file_dir}/{file_name}"
         size = get_readable_file_size(get_path_size(file_path))
         LOGGER.info("Uploading File: " + file_path)
-        self.updater = setInterval(self.update_interval, self._on_upload_progress)
+        self.updater = await setInterval(self.update_interval, self._on_upload_progress)
+        # await self.updater._init()
         try:
             if ospath.isfile(file_path):
                 mime_type = get_mime_type(file_path)
@@ -325,7 +326,7 @@ class GoogleDriveHelper:
             else:
                 err = e
             LOGGER.error(err)
-            self.__listener.onUploadError(str(err))
+            await self.__listener.onUploadError(str(err))
             self.is_errored = True
         finally:
             self.updater.cancel()
@@ -337,7 +338,7 @@ class GoogleDriveHelper:
                 return
             elif self.is_errored:
                 return
-        self.__listener.onUploadComplete(
+        await self.__listener.onUploadComplete(
             link, size, self.__total_files, self.__total_folders, mime_type, self.name
         )
 
@@ -937,10 +938,11 @@ class GoogleDriveHelper:
             return msg, "", "", ""
         return "", size, name, files
 
-    def download(self, link):
+    async def download(self, link):
         self.is_downloading = True
         file_id = self.__getIdFromUrl(link)
-        self.updater = setInterval(self.update_interval, self._on_download_progress)
+        self.updater = await setInterval(self.update_interval, self._on_download_progress)
+        # await self.updater._init()
         try:
             meta = self.__getFileMetadata(file_id)
             path = f"{DOWNLOAD_DIR}{self.__listener.uid}/"
@@ -965,13 +967,13 @@ class GoogleDriveHelper:
                     self.__service = token_service
                     self.updater.cancel()
                     return self.download(link)
-            self.__listener.onDownloadError(err)
+            await self.__listener.onDownloadError(err)
             self.is_cancelled = True
         finally:
             self.updater.cancel()
             if self.is_cancelled:
                 return
-        self.__listener.onDownloadComplete()
+        await self.__listener.onDownloadComplete()
 
     def __download_folder(self, folder_id, path, folder_name):
         folder_name = folder_name.replace("/", "")
@@ -1067,15 +1069,15 @@ class GoogleDriveHelper:
             self.downloaded_bytes += chunk_size
             self.dtotal_time += self.update_interval
 
-    def cancel_download(self):
+    async def cancel_download(self):
         self.is_cancelled = True
         if self.is_downloading:
             LOGGER.info(f"Cancelling Download: {self.name}")
-            self.__listener.onDownloadError("Download stopped by user!")
+            await self.__listener.onDownloadError("Download stopped by user!")
         elif self.is_cloning:
             LOGGER.info(f"Cancelling Clone: {self.name}")
         elif self.is_uploading:
             LOGGER.info(f"Cancelling Upload: {self.name}")
-            self.__listener.onUploadError(
+            await self.__listener.onUploadError(
                 "your upload has been stopped and uploaded data has been deleted!"
             )

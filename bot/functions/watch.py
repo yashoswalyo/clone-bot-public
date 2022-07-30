@@ -1,15 +1,17 @@
+import asyncio
 from threading import Thread
 from telegram.ext import CommandHandler, CallbackQueryHandler
-from telegram import InlineKeyboardMarkup
+from pyrogram import enums, filters,Client
+from pyrogram.types import Message, InlineKeyboardMarkup, CallbackQuery
 from time import sleep
 from re import split as re_split
 
-from bot import DOWNLOAD_DIR, dispatcher
+from bot import AUTHORIZED_CHATS, DOWNLOAD_DIR, dispatcher
 from bot.helper.tg_helper.msg_utils import sendMessage, sendMarkup, editMessage
 from bot.helper.tg_helper import make_buttons
 from bot.helper.others.bot_utils import get_readable_file_size, is_url
 from bot.helper.mirror.download.youtube_dl_download_helper import (
-    YoutubeDLHelper,
+    YoutubeDLHelper
 )
 from bot.helper.tg_helper.list_of_commands import BotCommands
 from bot.helper.tg_helper.filters import CustomFilters
@@ -18,10 +20,10 @@ from .mirror import MirrorListener
 listener_dict = {}
 
 
-def _watch(bot, message, isZip=False, isLeech=False, multi=0):
-    mssg = message.text
-    user_id = message.from_user.id
-    msg_id = message.message_id
+async def _watch(c:Client, m:Message, isZip=False, isLeech=False, multi=0):
+    mssg = m.text
+    user_id = m.from_user.id
+    msg_id = m.id
 
     try:
         link = mssg.split(" ")[1].strip()
@@ -53,19 +55,19 @@ def _watch(bot, message, isZip=False, isLeech=False, multi=0):
     except:
         args = None
 
-    if message.from_user.username:
-        tag = f"@{message.from_user.username}"
+    if m.from_user.username:
+        tag = f"@{m.from_user.username}"
     else:
-        tag = message.from_user.mention_html(message.from_user.first_name)
+        tag = m.from_user.mention(m.from_user.first_name)
 
-    reply_to = message.reply_to_message
+    reply_to = m.reply_to_message
     if reply_to is not None:
         if len(link) == 0:
             link = reply_to.text.strip()
         if reply_to.from_user.username:
             tag = f"@{reply_to.from_user.username}"
         else:
-            tag = reply_to.from_user.mention_html(reply_to.from_user.first_name)
+            tag = reply_to.from_user.mention(reply_to.from_user.first_name)
 
     if not is_url(link):
         help_msg = "<b>Send link along with command line:</b>"
@@ -79,9 +81,9 @@ def _watch(bot, message, isZip=False, isLeech=False, multi=0):
         help_msg += " Like playlist_items:10 works with string so no need to add `^` before the number"
         help_msg += " but playlistend works only with integer so you must add `^` before the number like example above."
         help_msg += "\n\nCheck all arguments from this <a href='https://github.com/yt-dlp/yt-dlp/blob/a3125791c7a5cdf2c8c025b99788bf686edd1a8a/yt_dlp/YoutubeDL.py#L194'>FILE</a>."
-        return sendMessage(help_msg, bot, message)
+        return await sendMessage(help_msg, c, m)
 
-    listener = MirrorListener(bot, message, isZip, isLeech=isLeech, pswd=pswd, tag=tag)
+    listener = MirrorListener(c, m, isZip, isLeech=isLeech, pswd=pswd, tag=tag)
     buttons = make_buttons.ButtonMaker()
     best_video = "bv*+ba/b"
     best_audio = "ba/b"
@@ -90,7 +92,7 @@ def _watch(bot, message, isZip=False, isLeech=False, multi=0):
         result = ydl.extractMetaData(link, name, args, True)
     except Exception as e:
         msg = str(e).replace("<", " ").replace(">", " ")
-        return sendMessage(tag + " " + msg, bot, message)
+        return await sendMessage(tag + " " + msg, c, m)
     if "entries" in result:
         for i in ["144", "240", "360", "480", "720", "1080", "1440", "2160"]:
             video_format = f"bv*[height<={i}][ext=mp4]"
@@ -103,7 +105,7 @@ def _watch(bot, message, isZip=False, isLeech=False, multi=0):
         buttons.sbutton("Cancel", f"qu {msg_id} cancel")
         YTBUTTONS = InlineKeyboardMarkup(buttons.build_menu(3))
         listener_dict[msg_id] = [listener, user_id, link, name, YTBUTTONS, args]
-        bmsg = sendMarkup("Choose Playlist Videos Quality:", bot, message, YTBUTTONS)
+        bmsg = await sendMarkup("Choose Playlist Videos Quality:", c, m, YTBUTTONS)
     else:
         formats = result.get("formats")
         formats_dict = {}
@@ -160,27 +162,28 @@ def _watch(bot, message, isZip=False, isLeech=False, multi=0):
             args,
             formats_dict,
         ]
-        bmsg = sendMarkup("Choose Video Quality:", bot, message, YTBUTTONS)
-
-    Thread(target=_auto_cancel, args=(bmsg, msg_id)).start()
+        bmsg = await sendMarkup("Choose Video Quality:", c, m, YTBUTTONS)
+    await _auto_cancel(bmsg,msg_id)
+    # Thread(target=_auto_cancel, args=(bmsg, msg_id)).start()
     if multi > 1:
-        sleep(3)
+        await asyncio.sleep(3)
         nextmsg = type(
             "nextmsg",
             (object,),
             {
-                "chat_id": message.chat_id,
-                "message_id": message.reply_to_message.message_id + 1,
+                "chat_id": m.chat.id,
+                "message_id": m.reply_to_message.id + 1,
             },
         )
-        nextmsg = sendMessage(mssg.split(" ")[0], bot, nextmsg)
-        nextmsg.from_user.id = message.from_user.id
+        nextmsg = await sendMessage(mssg.split(" ")[0], c, nextmsg)
+        nextmsg.from_user.id = m.from_user.id
         multi -= 1
-        sleep(3)
-        Thread(target=_watch, args=(bot, nextmsg, isZip, isLeech, multi)).start()
+        await asyncio.sleep(3)
+        await _watch(c,nextmsg,isZip, isLeech, multi)
+        # Thread(target=_watch, args=(bot, nextmsg, isZip, isLeech, multi)).start()
 
 
-def _qual_subbuttons(task_id, qual, msg):
+async def _qual_subbuttons(task_id, qual, msg):
     buttons = make_buttons.ButtonMaker()
     task_info = listener_dict[task_id]
     formats_dict = task_info[6]
@@ -208,10 +211,10 @@ def _qual_subbuttons(task_id, qual, msg):
     buttons.sbutton("Back", f"qu {task_id} back")
     buttons.sbutton("Cancel", f"qu {task_id} cancel")
     SUBBUTTONS = InlineKeyboardMarkup(buttons.build_menu(2))
-    editMessage(f"Choose Video Bitrate for <b>{qual}</b>:", msg, SUBBUTTONS)
+    await editMessage(f"Choose Video Bitrate for <b>{qual}</b>:", msg, SUBBUTTONS)
 
 
-def _audio_subbuttons(task_id, msg, playlist=False):
+async def _audio_subbuttons(task_id, msg, playlist=False):
     buttons = make_buttons.ButtonMaker()
     audio_qualities = [64, 128, 320]
     for q in audio_qualities:
@@ -225,42 +228,41 @@ def _audio_subbuttons(task_id, msg, playlist=False):
     buttons.sbutton("Back", f"qu {task_id} back")
     buttons.sbutton("Cancel", f"qu {task_id} cancel")
     SUBBUTTONS = InlineKeyboardMarkup(buttons.build_menu(2))
-    editMessage(f"Choose Audio{i} Bitrate:", msg, SUBBUTTONS)
+    await editMessage(f"Choose Audio{i} Bitrate:", msg, SUBBUTTONS)
 
-
-def select_format(update, context):
-    query = update.callback_query
-    user_id = query.from_user.id
-    data = query.data
-    msg = query.message
+@Client.on_callback_query(filters.regex("qu") & filters.chat(sorted(AUTHORIZED_CHATS)))
+async def select_format(c:Client, cb: CallbackQuery):
+    user_id = cb.from_user.id
+    data = cb.data
+    msg = cb.message
     data = data.split(" ")
     task_id = int(data[1])
     try:
         task_info = listener_dict[task_id]
     except:
-        return editMessage("This is an old task", msg)
+        return await editMessage("This is an old task", msg)
     uid = task_info[1]
     if user_id != uid and not CustomFilters._owner_query(user_id):
-        return query.answer(text="This task is not for you!", show_alert=True)
+        return await cb.answer(text="This task is not for you!", show_alert=True)
     elif data[2] == "dict":
-        query.answer()
+        await cb.answer()
         qual = data[3]
-        return _qual_subbuttons(task_id, qual, msg)
+        return await _qual_subbuttons(task_id, qual, msg)
     elif data[2] == "back":
-        query.answer()
-        return editMessage("Choose Video Quality:", msg, task_info[4])
+        await cb.answer()
+        return await editMessage("Choose Video Quality:", msg, task_info[4])
     elif data[2] == "audio":
-        query.answer()
+        await cb.answer()
         if len(data) == 4:
             playlist = True
         else:
             playlist = False
-        return _audio_subbuttons(task_id, msg, playlist)
+        return await _audio_subbuttons(task_id, msg, playlist)
     elif data[2] == "cancel":
-        query.answer()
-        editMessage("Task has been cancelled.", msg)
+        await cb.answer()
+        await editMessage("Task has been cancelled.", msg)
     else:
-        query.answer()
+        await cb.answer()
         listener = task_info[0]
         link = task_info[2]
         name = task_info[3]
@@ -276,37 +278,38 @@ def select_format(update, context):
         else:
             playlist = False
         ydl = YoutubeDLHelper(listener)
-        Thread(
-            target=ydl.add_download,
-            args=(link, f"{DOWNLOAD_DIR}{task_id}", name, qual, playlist, args),
-        ).start()
-        query.message.delete()
+        ydl.add_download(link, "{DOWNLOAD_DIR}{task_id}", name, qual, playlist, args)
+        # Thread(
+        #     target=ydl.add_download,
+        #     args=(link, f"{DOWNLOAD_DIR}{task_id}", name, qual, playlist, args),
+        # ).start()
+        await cb.message.delete()
     del listener_dict[task_id]
 
 
-def _auto_cancel(msg, msg_id):
-    sleep(120)
+async def _auto_cancel(msg, msg_id):
+    await asyncio.sleep(120)
     try:
         del listener_dict[msg_id]
-        editMessage("Timed out! Task has been cancelled.", msg)
+        await editMessage("Timed out! Task has been cancelled.", msg)
     except:
         pass
 
+@Client.on_message(filters.command(BotCommands.WatchCommand) & filters.chat(sorted(AUTHORIZED_CHATS)))
+async def watch(c: Client, m: Message):
+    await _watch(c, m)
 
-def watch(update, context):
-    _watch(context.bot, update.message)
+@Client.on_message(filters.command(BotCommands.ZipWatchCommand) & filters.chat(sorted(AUTHORIZED_CHATS)))
+async def watchZip(c: Client, m: Message):
+    await _watch(c, m, True)
 
+@Client.on_message(filters.command(BotCommands.LeechWatchCommand) & filters.chat(sorted(AUTHORIZED_CHATS)))
+async def leechWatch(c: Client, m: Message):
+    await _watch(c, m, isLeech=True)
 
-def watchZip(update, context):
-    _watch(context.bot, update.message, True)
-
-
-def leechWatch(update, context):
-    _watch(context.bot, update.message, isLeech=True)
-
-
-def leechWatchZip(update, context):
-    _watch(context.bot, update.message, True, True)
+@Client.on_message(filters.command(BotCommands.LeechZipWatchCommand) & filters.chat(sorted(AUTHORIZED_CHATS)))
+async def leechWatchZip(c: Client, m: Message):
+    await _watch(c, m, True, True)
 
 
 watch_handler = CommandHandler(

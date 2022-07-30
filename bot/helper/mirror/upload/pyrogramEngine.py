@@ -1,3 +1,4 @@
+import asyncio
 from logging import getLogger, ERROR
 from os import remove as osremove, walk, path as ospath, rename as osrename
 from time import time, sleep
@@ -70,7 +71,7 @@ IMAGE_SUFFIXES = (
 
 
 class TgUploader:
-    def __init__(self, name=None, listener=None):
+    def __init__(self, name, listener):
         self.name = name
         self.uploaded_bytes = 0
         self._last_uploaded = 0
@@ -79,9 +80,9 @@ class TgUploader:
         self.__total_files = 0
         self.__is_cancelled = False
         self.__as_doc = AS_DOCUMENT
-        self.__thumb = f"Thumbnails/{listener.message.from_user.id}.jpg"
+        self.__thumb = f"Thumbnails/{listener.m.from_user.id}.jpg"
         self.__sent_msg = app.get_messages(
-            self.__listener.message.chat.id, self.__listener.uid
+            self.__listener.m.chat.id, self.__listener.uid
         )
         self.__msgs_dict = {}
         self.__corrupted = 0
@@ -89,7 +90,7 @@ class TgUploader:
         self.__user_settings()
         self.__client = app
 
-    def upload(self):
+    async def upload(self):
         path = f"{DOWNLOAD_DIR}{self.__listener.uid}"
         size = get_readable_file_size(get_path_size(path))
         for dirpath, subdir, files in sorted(walk(path)):
@@ -103,17 +104,17 @@ class TgUploader:
                         )
                         self.__corrupted += 1
                         continue
-                    self.__upload_file(up_path, file_, dirpath)
+                    await self.__upload_file(up_path, file_, dirpath)
                     if self.__is_cancelled:
                         return
                     if not self.__listener.isPrivate:
                         self.__msgs_dict[file_] = self.__sent_msg.link
                     self._last_uploaded = 0
-                    sleep(1)
+                    await asyncio.sleep(1)
         if self.__total_files <= self.__corrupted:
-            return self.__listener.onUploadError("Files Corrupted. Check logs")
+            return await self.__listener.onUploadError("Files Corrupted. Check logs")
         LOGGER.info(f"Leech Completed: {self.name}")
-        self.__listener.onUploadComplete(
+        await self.__listener.onUploadComplete(
             None,
             size,
             self.__msgs_dict,
@@ -122,7 +123,7 @@ class TgUploader:
             self.name,
         )
 
-    def __upload_file(self, up_path, file_, dirpath):
+    async def __upload_file(self, up_path, file_, dirpath):
         if CUSTOM_FILENAME is not None:
             cap_mono = f"<i>{CUSTOM_FILENAME} {file_}</i>"
             file_ = f"{CUSTOM_FILENAME} {file_}"
@@ -159,8 +160,8 @@ class TgUploader:
                             new_path = ospath.join(dirpath, file_)
                             osrename(up_path, new_path)
                             up_path = new_path
-                        self.__sent_msg = self.__client.send_video(
-                            chat_id=CHANNEL_ID,
+                        self.__sent_msg = await self.__client.send_video(
+                            chat_id=int(CHANNEL_ID),
                             video=up_path,
                             caption=cap_mono,
                             duration=duration,
@@ -174,8 +175,8 @@ class TgUploader:
                         )
                     elif file_.upper().endswith(AUDIO_SUFFIXES):
                         duration, artist, title = get_media_info(up_path)
-                        self.__sent_msg = self.__client.send_audio(
-                            chat_id=CHANNEL_ID,
+                        self.__sent_msg = await self.__client.send_audio(
+                            chat_id=int(CHANNEL_ID),
                             audio=up_path,
                             caption=cap_mono,
                             duration=duration,
@@ -187,8 +188,8 @@ class TgUploader:
                             progress=self.__upload_progress
                         )
                     elif file_.upper().endswith(IMAGE_SUFFIXES):
-                        self.__sent_msg = self.__client.send_photo(
-                            chat_id=CHANNEL_ID,
+                        self.__sent_msg = await self.__client.send_photo(
+                            chat_id=int(CHANNEL_ID),
                             photo=up_path,
                             caption=cap_mono,
                             disable_notification=True,
@@ -207,8 +208,8 @@ class TgUploader:
                             ):
                                 osremove(thumb)
                             return
-                    self.__sent_msg = self.__client.send_document(
-                        chat_id=CHANNEL_ID,
+                    self.__sent_msg = await self.__client.send_document(
+                        chat_id=int(CHANNEL_ID),
                         file_name=file_,
                         force_document=True,
                         document=up_path,
@@ -242,7 +243,7 @@ class TgUploader:
                             new_path = ospath.join(dirpath, file_)
                             osrename(up_path, new_path)
                             up_path = new_path
-                        self.__sent_msg = self.__sent_msg.reply_video(
+                        self.__sent_msg = await self.__sent_msg.reply_video(
                             video=up_path,
                             quote=True,
                             caption=cap_mono,
@@ -256,7 +257,7 @@ class TgUploader:
                         )
                     elif file_.upper().endswith(AUDIO_SUFFIXES):
                         duration, artist, title = get_media_info(up_path)
-                        self.__sent_msg = self.__sent_msg.reply_audio(
+                        self.__sent_msg = await self.__sent_msg.reply_audio(
                             audio=up_path,
                             quote=True,
                             caption=cap_mono,
@@ -268,7 +269,7 @@ class TgUploader:
                             progress=self.__upload_progress,
                         )
                     elif file_.upper().endswith(IMAGE_SUFFIXES):
-                        self.__sent_msg = self.__sent_msg.reply_photo(
+                        self.__sent_msg = await self.__sent_msg.reply_photo(
                             photo=up_path,
                             quote=True,
                             caption=cap_mono,
@@ -288,7 +289,7 @@ class TgUploader:
                             ):
                                 osremove(thumb)
                             return
-                    self.__sent_msg = self.__sent_msg.reply_document(
+                    self.__sent_msg = await self.__sent_msg.reply_document(
                         document=up_path,
                         quote=True,
                         thumb=thumb,
@@ -298,7 +299,7 @@ class TgUploader:
                     )
         except FloodWait as f:
             LOGGER.warning(str(f))
-            sleep(f.value)
+            await asyncio.sleep(f.value)
         except RPCError as e:
             LOGGER.error(f"RPCError: {e} File: {up_path}")
             self.__corrupted += 1
@@ -310,10 +311,10 @@ class TgUploader:
         if not self.__is_cancelled:
             osremove(up_path)
 
-    def __upload_progress(self, current, total):
+    async def __upload_progress(self, current, total):
         if self.__is_cancelled:
-            self.__listener.onUploadError("your upload has been stopped!")
-            app.stop_transmission()
+            await self.__listener.onUploadError("your upload has been stopped!")
+            await app.stop_transmission()
             return
         with self.__resource_lock:
             chunk_size = current - self._last_uploaded
@@ -321,9 +322,9 @@ class TgUploader:
             self.uploaded_bytes += chunk_size
 
     def __user_settings(self):
-        if self.__listener.message.from_user.id in AS_DOC_USERS:
+        if self.__listener.m.from_user.id in AS_DOC_USERS:
             self.__as_doc = True
-        elif self.__listener.message.from_user.id in AS_MEDIA_USERS:
+        elif self.__listener.m.from_user.id in AS_MEDIA_USERS:
             self.__as_doc = False
         if not ospath.lexists(self.__thumb):
             self.__thumb = None

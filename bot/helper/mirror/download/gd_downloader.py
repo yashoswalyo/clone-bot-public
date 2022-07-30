@@ -16,10 +16,10 @@ from bot.helper.others.bot_utils import get_readable_file_size
 from bot.helper.others.fs_utils import get_base_name, check_storage_threshold
 
 
-def add_gd_download(link, listener, is_gdtot, is_unified, is_udrive, is_sharer, is_drivehubs):
+async def add_gd_download(link, listener, is_gdtot, is_unified, is_udrive, is_sharer, is_drivehubs):
     res, size, name, files = GoogleDriveHelper().helper(link)
     if res != "":
-        return sendMessage(res, listener.bot, listener.message)
+        return await sendMessage(res, listener.c, listener.m)
     if STOP_DUPLICATE and not listener.isLeech:
         LOGGER.info("Checking File/Folder if already in Drive...")
         if listener.isZip:
@@ -33,7 +33,7 @@ def add_gd_download(link, listener, is_gdtot, is_unified, is_udrive, is_sharer, 
             gmsg, button = GoogleDriveHelper().drive_list(gname, True)
             if gmsg:
                 msg = "File/Folder is already available in Drive.\nHere are the search results:"
-                return sendMarkup(msg, listener.bot, listener.message, button)
+                return await sendMarkup(msg, listener.c, listener.m, button)
     if any([ZIP_UNZIP_LIMIT, STORAGE_THRESHOLD]):
         arch = any([listener.extract, listener.isZip])
         limit = None
@@ -42,7 +42,7 @@ def add_gd_download(link, listener, is_gdtot, is_unified, is_udrive, is_sharer, 
             if not acpt:
                 msg = f"You must leave {STORAGE_THRESHOLD}GB free storage."
                 msg += f"\nYour File/Folder size is {get_readable_file_size(size)}"
-                return sendMessage(msg, listener.bot, listener.message)
+                return await sendMessage(msg, listener.c, listener.m)
         if ZIP_UNZIP_LIMIT is not None and arch:
             mssg = f"Zip/Unzip limit is {ZIP_UNZIP_LIMIT}GB"
             limit = ZIP_UNZIP_LIMIT
@@ -52,7 +52,7 @@ def add_gd_download(link, listener, is_gdtot, is_unified, is_udrive, is_sharer, 
                 msg = (
                     f"{mssg}.\nYour File/Folder size is {get_readable_file_size(size)}."
                 )
-                return sendMessage(msg, listener.bot, listener.message)
+                return await sendMessage(msg, listener.c, listener.m)
     LOGGER.info(f"Download Name: {name}")
     drive = GoogleDriveHelper(name, listener)
     gid = "".join(SystemRandom().choices(ascii_letters + digits, k=12))
@@ -60,7 +60,7 @@ def add_gd_download(link, listener, is_gdtot, is_unified, is_udrive, is_sharer, 
     with download_dict_lock:
         download_dict[listener.uid] = download_status
     listener.onDownloadStart()
-    sendStatusMessage(listener.message, listener.bot)
+    await sendStatusMessage(listener.c, listener.m)
     drive.download(link)
     if (is_gdtot or is_unified or is_udrive or is_sharer):
         drive.deletefile(link)

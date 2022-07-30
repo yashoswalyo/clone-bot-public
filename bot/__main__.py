@@ -1,3 +1,4 @@
+import asyncio
 from signal import signal, SIGINT
 from os import path as ospath, remove as osremove, execl as osexecl
 from subprocess import run as srun, check_output
@@ -11,12 +12,13 @@ from psutil import (
     boot_time,
 )
 from time import time
-from pyrogram import idle
+from pyrogram import filters,Client,idle
+from pyrogram.types import Message, InlineKeyboardMarkup
 from sys import executable
-from telegram import InlineKeyboardMarkup
 from telegram.ext import CommandHandler
-
 from bot import (
+    AUTHORIZED_CHATS,
+    OWNER_ID,
     bot,
     app,
     dispatcher,
@@ -29,7 +31,7 @@ from bot import (
     DB_URI,
 )
 from .helper.others.fs_utils import start_cleanup, clean_all, exit_clean_up
-from .helper.others.telegraph_helper import telegraph
+# from .helper.others.telegraph_helper import telegraph
 from .helper.others.bot_utils import get_readable_file_size, get_readable_time
 from .helper.others.database_handler import DbManger
 from .helper.tg_helper.list_of_commands import BotCommands
@@ -57,8 +59,8 @@ from .functions import (
     leech_settings,
 )
 
-
-def stats(update, context):
+@app.on_message(filters.command(BotCommands.StatsCommand) & filters.chat(sorted(AUTHORIZED_CHATS)))
+async def stats(c:Client, m:Message):
     if ospath.exists(".git"):
         last_commit = check_output(
             ["git log -1 --date=short --pretty=format:'%cd <b>From</b> %cr'"],
@@ -103,51 +105,43 @@ def stats(update, context):
         f"<b>Memory Free:</b> {mem_a}\n"
         f"<b>Memory Used:</b> {mem_u}\n"
     )
-    sendMessage(stats, context.bot, update.message)
+    await sendMessage(stats, c, m)
 
-
-def start(update, context):
+@app.on_message(filters.command(BotCommands.StartCommand) & filters.chat(sorted(AUTHORIZED_CHATS)))
+async def start(client:Client, message:Message):
     buttons = ButtonMaker()
     buttons.buildbutton(
         "Repo", "https://www.github.com/yashoswalyo/clone-bot-public"
     )
     buttons.buildbutton("Report Group", "https://t.me/yash_codes_support")
     reply_markup = InlineKeyboardMarkup(buttons.build_menu(2))
-    if CustomFilters.authorized_user(update) or CustomFilters.authorized_chat(update):
-        start_string = f"""
+    start_string = f"""
 This bot can mirror all your links to Google Drive!
 Type /{BotCommands.HelpCommand} to get a list of available commands
 """
-        sendMarkup(start_string, context.bot, update.message, reply_markup)
-    else:
-        sendMarkup(
-            "Not Authorized user, deploy your own clone bot",
-            context.bot,
-            update.message,
-            reply_markup,
-        )
+    await sendMarkup(start_string, client, message, reply_markup)
 
-
-def restart(update, context):
-    restart_message = sendMessage("Restarting...", context.bot, update.message)
+@app.on_message(filters.command(BotCommands.RestartCommand) & filters.user(OWNER_ID))
+async def restart(c: Client, m: Message):
+    restart_message = await sendMessage("Restarting...", c, m)
     if Interval:
         Interval[0].cancel()
     clean_all()
     with open(".restartmsg", "w") as f:
         f.truncate(0)
-        f.write(f"{restart_message.chat.id}\n{restart_message.message_id}\n")
+        f.write(f"{restart_message.chat.id}\n{restart_message.id}\n")
     osexecl(executable, executable, "-m", "bot")
 
-
-def ping(update, context):
+@app.on_message(filters.command(BotCommands.PingCommand) & (filters.user(OWNER_ID) | filters.chat(sorted(AUTHORIZED_CHATS))))
+async def ping(c:Client, m:Message):
     start_time = int(round(time() * 1000))
-    reply = sendMessage("Starting Ping", context.bot, update.message)
+    reply = await sendMessage("Starting Ping", c, m)
     end_time = int(round(time() * 1000))
-    editMessage(f"{end_time - start_time} ms", reply)
+    await editMessage(f"{end_time - start_time} ms", reply)
 
-
-def log(update, context):
-    sendLogFile(context.bot, update.message)
+@app.on_message(filters.command(BotCommands.LogCommand) & filters.user(OWNER_ID))
+async def log(c:Client, m:Message):
+    await sendLogFile(c, m)
 
 
 help_string_telegraph = f"""<br>
@@ -196,10 +190,12 @@ help_string_telegraph = f"""<br>
 <b>/{BotCommands.StatsCommand}</b>: Show Stats of the machine the bot is hosted on
 """
 
-help = telegraph.create_page(
-    title="Mirror-Leech-Bot Help",
-    content=help_string_telegraph,
-)["path"]
+# help = telegraph.create_page(
+#     title="Mirror-Leech-Bot Help",
+#     content=help_string_telegraph,
+# )["path"]
+help = "something"
+
 
 help_string = f"""
 /{BotCommands.PingCommand}: Check how long it takes to Ping the Bot
@@ -223,12 +219,12 @@ help_string = f"""
 /{BotCommands.ExecHelpCommand}: Get help for Executor module (Only Owner)
 """
 
-
-def bot_help(update, context):
+@app.on_message(filters.command(BotCommands.HelpCommand) & filters.chat(sorted(AUTHORIZED_CHATS)))
+async def bot_help(c:Client, m:Message):
     button = ButtonMaker()
     button.buildbutton("Other Commands", f"https://telegra.ph/{help}")
     reply_markup = InlineKeyboardMarkup(button.build_menu(1))
-    sendMarkup(help_string, context.bot, update.message, reply_markup)
+    await sendMarkup(help_string, c, m, reply_markup)
 
 
 botcmds = [
@@ -259,9 +255,9 @@ botcmds = [
 ]
 
 
-def main():
+async def main():
     # bot.set_my_commands(botcmds)
-    start_cleanup()
+    # start_cleanup()
     if INCOMPLETE_TASK_NOTIFIER and DB_URI is not None:
         notifier_dict = DbManger().get_incomplete_tasks()
         if notifier_dict:
@@ -296,50 +292,18 @@ def main():
             chat_id, msg_id = map(int, f)
         bot.edit_message_text("Restarted successfully!", chat_id, msg_id)
         osremove(".restartmsg")
-
-    start_handler = CommandHandler(BotCommands.StartCommand, start, run_async=True)
-    ping_handler = CommandHandler(
-        BotCommands.PingCommand,
-        ping,
-        filters=CustomFilters.authorized_chat | CustomFilters.authorized_user,
-        run_async=True,
-    )
-    restart_handler = CommandHandler(
-        BotCommands.RestartCommand,
-        restart,
-        filters=CustomFilters.owner_filter | CustomFilters.sudo_user,
-        run_async=True,
-    )
-    help_handler = CommandHandler(
-        BotCommands.HelpCommand,
-        bot_help,
-        filters=CustomFilters.authorized_chat | CustomFilters.authorized_user,
-        run_async=True,
-    )
-    stats_handler = CommandHandler(
-        BotCommands.StatsCommand,
-        stats,
-        filters=CustomFilters.authorized_chat | CustomFilters.authorized_user,
-        run_async=True,
-    )
-    log_handler = CommandHandler(
-        BotCommands.LogCommand,
-        log,
-        filters=CustomFilters.owner_filter | CustomFilters.sudo_user,
-        run_async=True,
-    )
-    dispatcher.add_handler(start_handler)
-    dispatcher.add_handler(ping_handler)
-    dispatcher.add_handler(restart_handler)
-    dispatcher.add_handler(help_handler)
-    dispatcher.add_handler(stats_handler)
-    dispatcher.add_handler(log_handler)
-    updater.start_polling(drop_pending_updates=IGNORE_PENDING_REQUESTS)
+    for id in sorted(AUTHORIZED_CHATS):
+        await app.send_message(
+            chat_id=id,
+            text="<b>Bot Started!</b>"
+        )
     LOGGER.info("Bot Started!")
-    signal(SIGINT, exit_clean_up)
+
+# app.start()
+# asyncio.run(main())
+# # app.run(main())
+# app.run()
+
+app.run()
 
 
-
-app.start()
-main()
-idle()

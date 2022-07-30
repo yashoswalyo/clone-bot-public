@@ -167,7 +167,7 @@ def unified(url: str) -> str:
 def parse_info(res, url):
     info_parsed = {}
     if 'drivebuzz' in url:
-        info_chunks = re_findall('<td\salign="right">(.*?)<\/td>', res.text)
+        info_chunks = re.findall('<td\salign="right">(.*?)<\/td>', res.text)
     elif 'sharer.pw' in url:
         f = re.findall(">(.*?)<\/td>", res.text)
         info_parsed = {}

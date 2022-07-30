@@ -1,16 +1,18 @@
-from bot import AUTHORIZED_CHATS, SUDO_USERS, dispatcher, DB_URI
+from bot import AUTHORIZED_CHATS, OWNER_ID, SUDO_USERS, dispatcher, DB_URI
 from bot.helper.tg_helper.msg_utils import sendMessage
 from telegram.ext import CommandHandler
 from bot.helper.tg_helper.filters import CustomFilters
 from bot.helper.tg_helper.list_of_commands import BotCommands
 from bot.helper.others.database_handler import DbManger
+from pyrogram import enums, filters,Client
+from pyrogram.types import Message
 
-
-def authorize(update, context):
+@Client.on_message(filters.command(BotCommands.AuthorizeCommand) & filters.user(sorted(SUDO_USERS)) & filters.user(OWNER_ID))
+async def authorize(c: Client, m: Message):
     reply_message = None
     message_ = None
-    reply_message = update.message.reply_to_message
-    message_ = update.message.text.split(" ")
+    reply_message = m.reply_to_message
+    message_ = m.text.split(" ")
     if len(message_) == 2:
         user_id = int(message_[1])
         if user_id in AUTHORIZED_CHATS:
@@ -23,7 +25,7 @@ def authorize(update, context):
             msg = "User Authorized"
     elif reply_message is None:
         # Trying to authorize a chat
-        chat_id = update.effective_chat.id
+        chat_id = m.chat.id
         if chat_id in AUTHORIZED_CHATS:
             msg = "Chat Already Authorized!"
         elif DB_URI is not None:
@@ -43,14 +45,14 @@ def authorize(update, context):
         else:
             AUTHORIZED_CHATS.add(user_id)
             msg = "User Authorized"
-    sendMessage(msg, context.bot, update.message)
+    await sendMessage(msg, c, m)
 
-
-def unauthorize(update, context):
+@Client.on_message(filters.command(BotCommands.UnAuthorizeCommand) & filters.user(sorted(SUDO_USERS)) & filters.user(OWNER_ID))
+async def unauthorize(c: Client, m: Message):
     reply_message = None
     message_ = None
-    reply_message = update.message.reply_to_message
-    message_ = update.message.text.split(" ")
+    reply_message = m.reply_to_message
+    message_ = m.text.split(" ")
     if len(message_) == 2:
         user_id = int(message_[1])
         if user_id in AUTHORIZED_CHATS:
@@ -63,7 +65,7 @@ def unauthorize(update, context):
             msg = "User Already Unauthorized!"
     elif reply_message is None:
         # Trying to unauthorize a chat
-        chat_id = update.effective_chat.id
+        chat_id = m.chat.id
         if chat_id in AUTHORIZED_CHATS:
             if DB_URI is not None:
                 msg = DbManger().user_unauth(chat_id)
@@ -83,14 +85,14 @@ def unauthorize(update, context):
             AUTHORIZED_CHATS.remove(user_id)
         else:
             msg = "User Already Unauthorized!"
-    sendMessage(msg, context.bot, update.message)
+    await sendMessage(msg, c, m)
 
-
-def addSudo(update, context):
+@Client.on_message(filters.command(BotCommands.AddSudoCommand) & filters.user(OWNER_ID))
+async def addSudo(c: Client, m: Message):
     reply_message = None
     message_ = None
-    reply_message = update.message.reply_to_message
-    message_ = update.message.text.split(" ")
+    reply_message = m.reply_to_message
+    message_ = m.text.split(" ")
     if len(message_) == 2:
         user_id = int(message_[1])
         if user_id in SUDO_USERS:
@@ -114,14 +116,14 @@ def addSudo(update, context):
         else:
             SUDO_USERS.add(user_id)
             msg = "Promoted as Sudo"
-    sendMessage(msg, context.bot, update.message)
+    await sendMessage(msg, c, m)
 
-
-def removeSudo(update, context):
+@Client.on_message(filters.command(BotCommands.RmSudoCommand) & filters.user(OWNER_ID))
+async def removeSudo(c: Client, m: Message):
     reply_message = None
     message_ = None
-    reply_message = update.message.reply_to_message
-    message_ = update.message.text.split(" ")
+    reply_message = m.reply_to_message
+    message_ = m.text.split(" ")
     if len(message_) == 2:
         user_id = int(message_[1])
         if user_id in SUDO_USERS:
@@ -144,53 +146,11 @@ def removeSudo(update, context):
             SUDO_USERS.remove(user_id)
         else:
             msg = "Not sudo user to demote!"
-    sendMessage(msg, context.bot, update.message)
+    await sendMessage(msg, c, m)
 
-
-def sendAuthChats(update, context):
+@Client.on_message(filters.command(BotCommands.AuthorizedUsersCommand) & filters.user(sorted(SUDO_USERS)) & filters.user(OWNER_ID))
+async def sendAuthChats(c: Client, m:Message):
     user = sudo = ""
     user += "\n".join(f"<code>{uid}</code>" for uid in AUTHORIZED_CHATS)
     sudo += "\n".join(f"<code>{uid}</code>" for uid in SUDO_USERS)
-    sendMessage(
-        f"<b><u>Authorized Chats:</u></b>\n{user}\n<b><u>Sudo Users:</u></b>\n{sudo}",
-        context.bot,
-        update.message,
-    )
-
-
-send_auth_handler = CommandHandler(
-    command=BotCommands.AuthorizedUsersCommand,
-    callback=sendAuthChats,
-    filters=CustomFilters.owner_filter | CustomFilters.sudo_user,
-    run_async=True,
-)
-authorize_handler = CommandHandler(
-    command=BotCommands.AuthorizeCommand,
-    callback=authorize,
-    filters=CustomFilters.owner_filter | CustomFilters.sudo_user,
-    run_async=True,
-)
-unauthorize_handler = CommandHandler(
-    command=BotCommands.UnAuthorizeCommand,
-    callback=unauthorize,
-    filters=CustomFilters.owner_filter | CustomFilters.sudo_user,
-    run_async=True,
-)
-addsudo_handler = CommandHandler(
-    command=BotCommands.AddSudoCommand,
-    callback=addSudo,
-    filters=CustomFilters.owner_filter,
-    run_async=True,
-)
-removesudo_handler = CommandHandler(
-    command=BotCommands.RmSudoCommand,
-    callback=removeSudo,
-    filters=CustomFilters.owner_filter,
-    run_async=True,
-)
-
-dispatcher.add_handler(send_auth_handler)
-dispatcher.add_handler(authorize_handler)
-dispatcher.add_handler(unauthorize_handler)
-dispatcher.add_handler(addsudo_handler)
-dispatcher.add_handler(removesudo_handler)
+    await sendMessage(f"<b><u>Authorized Chats:</u></b>\n{user}\n<b><u>Sudo Users:</u></b>\n{sudo}",c,m,)

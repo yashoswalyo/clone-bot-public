@@ -11,7 +11,7 @@ class GdDownloadStatus:
         self.__obj = obj
         self.__size = size
         self.__uid = listener.uid
-        self.message = listener.message
+        self.message = listener.m
         self.__gid = gid
 
     def path(self):

@@ -1,3 +1,4 @@
+
 from bot.helper.others.bot_utils import (
     MirrorStatus,
     get_readable_file_size,
@@ -12,7 +13,7 @@ class TgUploadStatus:
         self.__size = size
         self.__uid = listener.uid
         self.__gid = gid
-        self.message = listener.message
+        self.message = listener.m
 
     def path(self):
         return f"{DOWNLOAD_DIR}{self.__uid}"

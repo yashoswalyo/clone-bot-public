@@ -3,10 +3,10 @@ from bot.helper.others.bot_utils import (
     get_readable_file_size,
     get_readable_time,
 )
-
+from pyrogram.types import Message
 
 class CloneStatus:
-    def __init__(self, obj, size, message, gid):
+    def __init__(self, obj, size, message:Message, gid):
         self.__obj = obj
         self.__size = size
         self.message = message

@@ -2,60 +2,59 @@ from os import path as ospath, getcwd, chdir
 from traceback import format_exc
 from textwrap import indent
 from io import StringIO, BytesIO
-from telegram import ParseMode
 from telegram.ext import CommandHandler
 from contextlib import redirect_stdout
+from pyrogram import enums, filters,Client
+from pyrogram.types import Message
 
 from bot.helper.tg_helper.filters import CustomFilters
 from bot.helper.tg_helper.list_of_commands import BotCommands
 from bot.helper.tg_helper.msg_utils import sendMessage
-from bot import LOGGER, dispatcher
+from bot import LOGGER, OWNER_ID, dispatcher
 
 namespaces = {}
 
 
-def namespace_of(chat, update, bot):
+def namespace_of(chat, m:Message, c:Client):
     if chat not in namespaces:
         namespaces[chat] = {
             "__builtins__": globals()["__builtins__"],
-            "bot": bot,
-            "effective_message": update.effective_message,
-            "effective_user": update.effective_user,
-            "effective_chat": update.effective_chat,
-            "update": update,
+            "bot": c,
+            "effective_message": m,
+            "effective_user": m.from_user,
+            "effective_chat": m.chat,
+            "update":m
         }
 
     return namespaces[chat]
 
 
-def log_input(update):
-    user = update.effective_user.id
-    chat = update.effective_chat.id
-    LOGGER.info(f"IN: {update.effective_message.text} (user={user}, chat={chat})")
+def log_input(m:Message):
+    user = m.from_user.id
+    chat = m.chat.id
+    LOGGER.info(f"IN: {m.link} (user={user}, chat={chat})")
 
 
-def send(msg, bot, update):
+async def send(msg, c:Client, m:Message):
     if len(str(msg)) > 2000:
         with BytesIO(str.encode(msg)) as out_file:
             out_file.name = "output.txt"
-            bot.send_document(chat_id=update.effective_chat.id, document=out_file)
+            await c.send_document(chat_id=m.chat.id, document=out_file)
     else:
         LOGGER.info(f"OUT: '{msg}'")
-        bot.send_message(
-            chat_id=update.effective_chat.id,
+        await c.send_message(
+            chat_id=m.chat.id,
             text=f"`{msg}`",
-            parse_mode=ParseMode.MARKDOWN,
+            reply_to_message_id=m.id
         )
 
+@Client.on_message(filters.command("eval") & filters.user(OWNER_ID))
+async def evaluate(c:Client, m:Message):
+    await send(do(eval, c, m), c, m)
 
-def evaluate(update, context):
-    bot = context.bot
-    send(do(eval, bot, update), bot, update)
-
-
-def execute(update, context):
-    bot = context.bot
-    send(do(exec, bot, update), bot, update)
+@Client.on_message(filters.command("exec") & filters.user(OWNER_ID))
+async def execute(c:Client, m:Message):
+    await send(do(exec, c, m), c, m)
 
 
 def cleanup_code(code):
@@ -64,11 +63,11 @@ def cleanup_code(code):
     return code.strip("` \n")
 
 
-def do(func, bot, update):
-    log_input(update)
-    content = update.message.text.split(" ", 1)[-1]
+def do(func, c:Client, m:Message):
+    log_input(m)
+    content = m.text.split(" ", 1)[-1]
     body = cleanup_code(content)
-    env = namespace_of(update.message.chat_id, update, bot)
+    env = namespace_of(m.chat.id, m, c)
 
     chdir(getcwd())
     with open(ospath.join(getcwd(), "bot/functions/temp.txt"), "w") as temp:
@@ -107,43 +106,42 @@ def do(func, bot, update):
         if result:
             return result
 
-
-def clear(update, context):
-    bot = context.bot
-    log_input(update)
+@Client.on_message(filters.command("clearlocals") & filters.user(OWNER_ID))
+async def clear(c: Client, m:Message):
+    log_input(m)
     global namespaces
-    if update.message.chat_id in namespaces:
-        del namespaces[update.message.chat_id]
-    send("Cleared locals.", bot, update)
+    if m.chat.id in namespaces:
+        del namespaces[m.chat.id]
+    await send("Cleared locals.", c, m)
 
-
-def exechelp(update, context):
+@Client.on_message(filters.command(BotCommands.ExecHelpCommand) & filters.user(OWNER_ID))
+async def exechelp(c: Client, m:Message):
     help_string = """
 <b>Executor</b>
 • /eval <i>Run Python Code Line | Lines</i>
 • /exec <i>Run Commands In Exec</i>
 • /clearlocals <i>Cleared locals</i>
 """
-    sendMessage(help_string, context.bot, update.message)
+    await sendMessage(help_string, c, m)
 
 
-EVAL_HANDLER = CommandHandler(
-    ("eval"), evaluate, filters=CustomFilters.owner_filter, run_async=True
-)
-EXEC_HANDLER = CommandHandler(
-    ("exec"), execute, filters=CustomFilters.owner_filter, run_async=True
-)
-CLEAR_HANDLER = CommandHandler(
-    "clearlocals", clear, filters=CustomFilters.owner_filter, run_async=True
-)
-EXECHELP_HANDLER = CommandHandler(
-    BotCommands.ExecHelpCommand,
-    exechelp,
-    filters=CustomFilters.owner_filter,
-    run_async=True,
-)
+# EVAL_HANDLER = CommandHandler(
+#     ("eval"), evaluate, filters=CustomFilters.owner_filter, run_async=True
+# )
+# EXEC_HANDLER = CommandHandler(
+#     ("exec"), execute, filters=CustomFilters.owner_filter, run_async=True
+# )
+# CLEAR_HANDLER = CommandHandler(
+#     "clearlocals", clear, filters=CustomFilters.owner_filter, run_async=True
+# )
+# EXECHELP_HANDLER = CommandHandler(
+#     BotCommands.ExecHelpCommand,
+#     exechelp,
+#     filters=CustomFilters.owner_filter,
+#     run_async=True,
+# )
 
-dispatcher.add_handler(EVAL_HANDLER)
-dispatcher.add_handler(EXEC_HANDLER)
-dispatcher.add_handler(CLEAR_HANDLER)
-dispatcher.add_handler(EXECHELP_HANDLER)
+# dispatcher.add_handler(EVAL_HANDLER)
+# dispatcher.add_handler(EXEC_HANDLER)
+# dispatcher.add_handler(CLEAR_HANDLER)
+# dispatcher.add_handler(EXECHELP_HANDLER)

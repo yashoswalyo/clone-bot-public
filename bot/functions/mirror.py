@@ -1,3 +1,4 @@
+import asyncio
 from base64 import b64encode
 from requests import get as rget, utils as rutils
 from re import match as re_match, search as re_search, split as re_split
@@ -9,9 +10,11 @@ from subprocess import run as srun
 from pathlib import PurePath
 from html import escape
 from telegram.ext import CommandHandler
-from telegram import InlineKeyboardMarkup
-
+from pyrogram import enums, filters,Client
+from pyrogram.types import Message, InlineKeyboardMarkup, CallbackQuery, User
 from bot import (
+    AUTHORIZED_CHATS,
+    SUDO_USERS,
     Interval,
     INDEX_URL,
     BUTTON_FOUR_NAME,
@@ -79,8 +82,8 @@ from bot.helper.others.database_handler import DbManger
 class MirrorListener:
     def __init__(
         self,
-        bot,
-        message,
+        c:Client,
+        m:Message,
         isZip=False,
         extract=False,
         isQbit=False,
@@ -88,32 +91,32 @@ class MirrorListener:
         pswd=None,
         tag=None,
     ):
-        self.bot = bot
-        self.message = message
-        self.uid = self.message.message_id
+        self.c:Client = c
+        self.m:Message = m
+        self.uid = self.m.id
         self.extract = extract
         self.isZip = isZip
         self.isQbit = isQbit
         self.isLeech = isLeech
         self.pswd = pswd
         self.tag = tag
-        self.isPrivate = self.message.chat.type in ["private", "group"]
+        self.isPrivate = self.m.chat.type in ["private", "group"]
 
-    def clean(self):
+    async def clean(self):
         try:
             Interval[0].cancel()
             del Interval[0]
-            delete_all_messages()
+            await delete_all_messages()
         except IndexError:
             pass
 
     def onDownloadStart(self):
         if not self.isPrivate and INCOMPLETE_TASK_NOTIFIER and DB_URI is not None:
             DbManger().add_incomplete_task(
-                self.message.chat.id, self.message.link, self.tag
+                self.m.chat.id, self.m.link, self.tag
             )
 
-    def onDownloadComplete(self):
+    async def onDownloadComplete(self):
         with download_dict_lock:
             LOGGER.info(f"Download completed: {download_dict[self.uid].name()}")
             download = download_dict[self.uid]
@@ -249,8 +252,8 @@ class MirrorListener:
             tg_upload_status = TgUploadStatus(tg, size, gid, self)
             with download_dict_lock:
                 download_dict[self.uid] = tg_upload_status
-            update_all_messages()
-            tg.upload()
+            await update_all_messages()
+            await tg.upload()
         else:
             size = get_path_size(up_path)
             LOGGER.info(f"Upload Name: {up_name}")
@@ -258,10 +261,10 @@ class MirrorListener:
             upload_status = UploadStatus(drive, size, gid, self)
             with download_dict_lock:
                 download_dict[self.uid] = upload_status
-            update_all_messages()
-            drive.upload(up_name)
+            await update_all_messages()
+            await drive.upload(up_name)
 
-    def onDownloadError(self, error):
+    async def onDownloadError(self, error):
         error = error.replace("<", " ").replace(">", " ")
         clean_download(f"{DOWNLOAD_DIR}{self.uid}")
         with download_dict_lock:
@@ -271,18 +274,18 @@ class MirrorListener:
                 LOGGER.error(str(e))
             count = len(download_dict)
         msg = f"{self.tag} your download has been stopped due to: {error}"
-        sendMessage(msg, self.bot, self.message)
+        await sendMessage(msg, self.c, self.m)
         if count == 0:
             self.clean()
         else:
-            update_all_messages()
+            await update_all_messages()
 
         if not self.isPrivate and INCOMPLETE_TASK_NOTIFIER and DB_URI is not None:
-            DbManger().rm_complete_task(self.message.link)
+            DbManger().rm_complete_task(self.m.link)
 
-    def onUploadComplete(self, link: str, size, files, folders, typ, name: str):
+    async def onUploadComplete(self, link: str, size, files, folders, typ, name: str):
         if not self.isPrivate and INCOMPLETE_TASK_NOTIFIER and DB_URI is not None:
-            DbManger().rm_complete_task(self.message.link)
+            DbManger().rm_complete_task(self.m.link)
         msg = f"<b>Name: </b><code>{escape(name)}</code>\n\n<b>Size: </b>{size}"
         if self.isLeech:
             msg += f"\n<b>Total Files: </b>{folders}"
@@ -290,17 +293,17 @@ class MirrorListener:
                 msg += f"\n<b>Corrupted Files: </b>{typ}"
             msg += f"\n<b>cc: </b>{self.tag}\n\n"
             if not files:
-                sendMessage(msg, self.bot, self.message)
+                await sendMessage(msg, self.c, self.m)
             else:
                 fmsg = ""
                 for index, (name, link) in enumerate(files.items(), start=1):
                     fmsg += f"{index}. <a href='{link}'>{name}</a>\n"
                     if len(fmsg.encode() + msg.encode()) > 4000:
-                        sendMessage(msg + fmsg, self.bot, self.message)
-                        sleep(1)
+                        await sendMessage(msg + fmsg, self.c, self.m)
+                        await asyncio.sleep(1)
                         fmsg = ""
                 if fmsg != "":
-                    sendMessage(msg + fmsg, self.bot, self.message)
+                    await sendMessage(msg + fmsg, self.c, self.m)
         else:
             msg += f"\n\n<b>Type: </b>{typ}"
             if ospath.isdir(f"{DOWNLOAD_DIR}{self.uid}/{name}"):
@@ -331,8 +334,8 @@ class MirrorListener:
                 buttons.buildbutton(f"{BUTTON_FIVE_NAME}", f"{BUTTON_FIVE_URL}")
             if BUTTON_SIX_NAME is not None and BUTTON_SIX_URL is not None:
                 buttons.buildbutton(f"{BUTTON_SIX_NAME}", f"{BUTTON_SIX_URL}")
-            sendMarkup(
-                msg, self.bot, self.message, InlineKeyboardMarkup(buttons.build_menu(2))
+            await sendMarkup(
+                msg, self.c, self.m, InlineKeyboardMarkup(buttons.build_menu(2))
             )
         clean_download(f"{DOWNLOAD_DIR}{self.uid}")
         with download_dict_lock:
@@ -342,11 +345,11 @@ class MirrorListener:
                 LOGGER.error(str(e))
             count = len(download_dict)
         if count == 0:
-            self.clean()
+            await self.clean()
         else:
-            update_all_messages()
+            await update_all_messages()
 
-    def onUploadError(self, error):
+    async def onUploadError(self, error):
         e_str = error.replace("<", "").replace(">", "")
         clean_download(f"{DOWNLOAD_DIR}{self.uid}")
         with download_dict_lock:
@@ -355,19 +358,19 @@ class MirrorListener:
             except Exception as e:
                 LOGGER.error(str(e))
             count = len(download_dict)
-        sendMessage(f"{self.tag} {e_str}", self.bot, self.message)
+        await sendMessage(f"{self.tag} {e_str}", self.c, self.m)
         if count == 0:
             self.clean()
         else:
-            update_all_messages()
+            await update_all_messages()
 
         if not self.isPrivate and INCOMPLETE_TASK_NOTIFIER and DB_URI is not None:
-            DbManger().rm_complete_task(self.message.link)
+            DbManger().rm_complete_task(self.m.link)
 
 
-def _mirror(
-    bot,
-    message,
+async def _mirror(
+    c:Client,
+    m:Message,
     isZip=False,
     extract=False,
     isQbit=False,
@@ -375,7 +378,7 @@ def _mirror(
     pswd=None,
     multi=0,
 ):
-    mesg = message.text.split("\n")
+    mesg = m.text.split("\n")
     message_args = mesg[0].split(" ", maxsplit=1)
     name_args = mesg[0].split("|", maxsplit=1)
     qbitsel = False
@@ -410,15 +413,15 @@ def _mirror(
     if len(pswdMsg) > 1:
         pswd = pswdMsg[1]
 
-    if message.from_user.username:
-        tag = f"@{message.from_user.username}"
+    if m.from_user.username:
+        tag = f"@{m.from_user.username}"
     else:
-        tag = message.from_user.mention_html(message.from_user.first_name)
+        tag = m.from_user.mention(m.from_user.first_name)
 
-    reply_to = message.reply_to_message
+    reply_to = m.reply_to_message
     if reply_to is not None:
         file = None
-        media_array = [reply_to.document, reply_to.video, reply_to.audio]
+        media_array = [reply_to.video , reply_to.audio, reply_to.document, reply_to.link ]
         for i in media_array:
             if i is not None:
                 file = i
@@ -428,52 +431,40 @@ def _mirror(
             if reply_to.from_user.username:
                 tag = f"@{reply_to.from_user.username}"
             else:
-                tag = reply_to.from_user.mention_html(reply_to.from_user.first_name)
+                tag = reply_to.from_user.mention(reply_to.from_user.first_name)
 
         if not is_url(link) and not is_magnet(link) or len(link) == 0:
-
+            file = reply_to.video
             if file is None:
                 reply_text = reply_to.text
                 if is_url(reply_text) or is_magnet(reply_text):
                     link = reply_text.strip()
             elif file.mime_type != "application/x-bittorrent" and not isQbit:
                 listener = MirrorListener(
-                    bot, message, isZip, extract, isQbit, isLeech, pswd, tag
+                    c, m, isZip, extract, isQbit, isLeech, pswd, tag
                 )
                 tg_downloader = TelegramDownloadHelper(listener)
-                tg_downloader.add_download(
-                    message, f"{DOWNLOAD_DIR}{listener.uid}/", name
+                await tg_downloader.add_download(
+                    m, f"{DOWNLOAD_DIR}{listener.uid}/", name
                 )
                 if multi > 1:
-                    sleep(3)
+                    await asyncio.sleep(3)
                     nextmsg = type(
                         "nextmsg",
                         (object,),
                         {
-                            "chat_id": message.chat_id,
-                            "message_id": message.reply_to_message.message_id + 1,
+                            "chat_id": m.chat.id,
+                            "message_id": m.reply_to_message.id + 1,
                         },
                     )
-                    nextmsg = sendMessage(message_args[0], bot, nextmsg)
-                    nextmsg.from_user.id = message.from_user.id
+                    nextmsg = await sendMessage(message_args[0], c, nextmsg)
+                    nextmsg.from_user.id = m.from_user.id
                     multi -= 1
-                    sleep(3)
-                    Thread(
-                        target=_mirror,
-                        args=(
-                            bot,
-                            nextmsg,
-                            isZip,
-                            extract,
-                            isQbit,
-                            isLeech,
-                            pswd,
-                            multi,
-                        ),
-                    ).start()
+                    await asyncio.sleep(3)
+                    await _mirror(c,nextmsg,isZip,extract,isQbit,isLeech,pswd,multi)
                 return
-            else:
-                link = file.get_file().file_path
+            # else:
+            #     link = file.get_file().file_path
 
     if not is_url(link) and not is_magnet(link) and not ospath.exists(link):
         help_msg = "<b>Send link along with command line:</b>"
@@ -490,7 +481,7 @@ def _mirror(
         )
         help_msg += "\n\n<b>Multi links only by replying to first link or file:</b>"
         help_msg += "\n<code>/command</code> 10(number of links/files)"
-        return sendMessage(help_msg, bot, message)
+        return await sendMessage(help_msg, c, m)
 
     LOGGER.info(link)
     
@@ -509,10 +500,10 @@ def _mirror(
             except DirectDownloadLinkException as e:
                 LOGGER.info(str(e))
                 if str(e).startswith('ERROR:'):
-                    return sendMessage(str(e), bot, message)
+                    return await sendMessage(str(e), c, m)
         
 
-    listener = MirrorListener(bot, message, isZip, extract, isQbit, isLeech, pswd, tag)
+    listener = MirrorListener(c, m, isZip, extract, isQbit, isLeech, pswd, tag)
 
     if is_gdrive_link(link):
         if not isZip and not extract and not isLeech:
@@ -521,99 +512,50 @@ def _mirror(
             )
             gmsg += f"Use /{BotCommands.ZipMirrorCommand} to make zip of Google Drive folder\n\n"
             gmsg += f"Use /{BotCommands.UnzipMirrorCommand} to extracts Google Drive archive file"
-            sendMessage(gmsg, bot, message)
+            await sendMessage(gmsg, c, m)
         else:
-            Thread(target=add_gd_download, args=(link, listener, is_gdtot, is_unified, is_udrive, is_sharer, is_drivehubs)).start()
-
+            await add_gd_download(link,listener,is_gdtot, is_unified, is_udrive, is_sharer, is_drivehubs)
+            
     if multi > 1:
-        sleep(3)
+        await asyncio.sleep(3)
         nextmsg = type(
             "nextmsg",
             (object,),
             {
-                "chat_id": message.chat_id,
-                "message_id": message.reply_to_message.message_id + 1,
+                "chat_id": m.chat.id,
+                "message_id": m.reply_to_message.id + 1,
             },
         )
         msg = message_args[0]
         if len(mesg) > 2:
             msg += "\n" + mesg[1] + "\n" + mesg[2]
-        nextmsg = sendMessage(msg, bot, nextmsg)
-        nextmsg.from_user.id = message.from_user.id
+        nextmsg = await sendMessage(msg, c, nextmsg)
+        nextmsg.from_user.id = m.from_user.id
         multi -= 1
-        sleep(3)
-        Thread(
-            target=_mirror,
-            args=(bot, nextmsg, isZip, extract, isQbit, isLeech, pswd, multi),
-        ).start()
+        await asyncio.sleep(3)
+        await _mirror(c, nextmsg, isZip, extract, isQbit, isLeech, pswd, multi)
 
 
-def mirror(update, context):
-    _mirror(context.bot, update.message)
+@Client.on_message(filters.command(BotCommands.MirrorCommand) & (filters.chat(sorted(AUTHORIZED_CHATS)) | filters.user(sorted(SUDO_USERS))))
+async def mirror(c:Client, m:Message):
+    await _mirror(c, m)
 
+@Client.on_message(filters.command(BotCommands.UnzipMirrorCommand) & (filters.chat(sorted(AUTHORIZED_CHATS)) | filters.user(sorted(SUDO_USERS))))
+async def unzip_mirror(c:Client,m:Message):
+    await _mirror(c, m, extract=True)
 
-def unzip_mirror(update, context):
-    _mirror(context.bot, update.message, extract=True)
+@Client.on_message(filters.command(BotCommands.ZipMirrorCommand) & (filters.chat(sorted(AUTHORIZED_CHATS)) | filters.user(sorted(SUDO_USERS))))
+async def zip_mirror(c:Client,m:Message):
+    await _mirror(c, m, True)
 
+@Client.on_message(filters.command(BotCommands.LeechCommand) & (filters.chat(sorted(AUTHORIZED_CHATS)) | filters.user(sorted(SUDO_USERS))))
+async def leech(c:Client, m:Message):
+    await _mirror(c, m, isLeech=True)
 
-def zip_mirror(update, context):
-    _mirror(context.bot, update.message, True)
+@Client.on_message(filters.command(BotCommands.UnzipLeechCommand) & (filters.chat(sorted(AUTHORIZED_CHATS)) | filters.user(sorted(SUDO_USERS))))
+async def unzip_leech(c:Client, m:Message):
+    await _mirror(c, m, extract=True, isLeech=True)
 
-
-def leech(update, context):
-    _mirror(context.bot, update.message, isLeech=True)
-
-
-def unzip_leech(update, context):
-    _mirror(context.bot, update.message, extract=True, isLeech=True)
-
-
-def zip_leech(update, context):
-    _mirror(context.bot, update.message, True, isLeech=True)
-
-
-mirror_handler = CommandHandler(
-    BotCommands.MirrorCommand,
-    mirror,
-    filters=CustomFilters.authorized_chat | CustomFilters.authorized_user,
-    run_async=True,
-)
-unzip_mirror_handler = CommandHandler(
-    BotCommands.UnzipMirrorCommand,
-    unzip_mirror,
-    filters=CustomFilters.authorized_chat | CustomFilters.authorized_user,
-    run_async=True,
-)
-zip_mirror_handler = CommandHandler(
-    BotCommands.ZipMirrorCommand,
-    zip_mirror,
-    filters=CustomFilters.authorized_chat | CustomFilters.authorized_user,
-    run_async=True,
-)
-
-leech_handler = CommandHandler(
-    BotCommands.LeechCommand,
-    leech,
-    filters=CustomFilters.authorized_chat | CustomFilters.authorized_user,
-    run_async=True,
-)
-unzip_leech_handler = CommandHandler(
-    BotCommands.UnzipLeechCommand,
-    unzip_leech,
-    filters=CustomFilters.authorized_chat | CustomFilters.authorized_user,
-    run_async=True,
-)
-zip_leech_handler = CommandHandler(
-    BotCommands.ZipLeechCommand,
-    zip_leech,
-    filters=CustomFilters.authorized_chat | CustomFilters.authorized_user,
-    run_async=True,
-)
-
-
-dispatcher.add_handler(mirror_handler)
-dispatcher.add_handler(unzip_mirror_handler)
-dispatcher.add_handler(zip_mirror_handler)
-dispatcher.add_handler(leech_handler)
-dispatcher.add_handler(unzip_leech_handler)
-dispatcher.add_handler(zip_leech_handler)
+@Client.on_message(filters.command(BotCommands.ZipLeechCommand) & (filters.chat(sorted(AUTHORIZED_CHATS)) | filters.user(sorted(SUDO_USERS))))
+async def zip_leech(c:Client, m:Message):
+    await _mirror(c, m, True, isLeech=True)

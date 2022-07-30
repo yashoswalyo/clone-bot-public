@@ -11,7 +11,7 @@ class TelegramDownloadStatus:
         self.__obj = obj
         self.__uid = listener.uid
         self.__gid = gid
-        self.message = listener.message
+        self.message = listener.m
 
     def gid(self):
         return self.__gid

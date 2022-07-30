@@ -1,19 +1,16 @@
 from subprocess import run as srun
-from telegram.ext import CommandHandler
-
-from bot import LOGGER, dispatcher
+from pyrogram import enums, filters,Client
+from pyrogram.types import Message, InlineKeyboardMarkup, CallbackQuery, User
+from bot import LOGGER, OWNER_ID, dispatcher
 from bot.helper.tg_helper.filters import CustomFilters
 from bot.helper.tg_helper.list_of_commands import BotCommands
 from bot.helper.tg_helper.msg_utils import sendMessage
 
-
-def shell(update, context):
-    message = update.effective_message
-    cmd = message.text.split(" ", 1)
+@Client.on_message(filters.command(BotCommands.ShellCommand) & filters.user(OWNER_ID))
+async def shell(c:Client, m:Message):
+    cmd = m.text.split(" ", 1)
     if len(cmd) == 1:
-        return sendMessage(
-            "No command to execute was given.", context.bot, update.message
-        )
+        return await sendMessage("No command to execute was given.", c, m)
     cmd = cmd[1]
     process = srun(cmd, capture_output=True, shell=True)
     reply = ""
@@ -29,19 +26,14 @@ def shell(update, context):
         with open("shell_output.txt", "w") as file:
             file.write(reply)
         with open("shell_output.txt", "rb") as doc:
-            context.bot.send_document(
+            await c.send_document(
                 document=doc,
-                filename=doc.name,
-                reply_to_message_id=message.message_id,
-                chat_id=message.chat_id,
+                file_name=doc.name,
+                reply_to_message_id=m.id,
+                chat_id=m.chat.id,
             )
     elif len(reply) != 0:
-        sendMessage(reply, context.bot, update.message)
+        await sendMessage(reply, c, m)
     else:
-        sendMessage("No Reply", context.bot, update.message)
+        await sendMessage("No Reply", c, m)
 
-
-SHELL_HANDLER = CommandHandler(
-    BotCommands.ShellCommand, shell, filters=CustomFilters.owner_filter, run_async=True
-)
-dispatcher.add_handler(SHELL_HANDLER)

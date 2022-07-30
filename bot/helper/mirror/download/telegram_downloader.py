@@ -2,7 +2,8 @@ from logging import getLogger, WARNING
 from random import choices
 from time import time
 from threading import RLock, Lock, Thread
-
+from pyrogram import enums, filters,Client
+from pyrogram.types import Message, InlineKeyboardMarkup, CallbackQuery, User
 from bot import (
     LOGGER,
     download_dict,
@@ -39,7 +40,7 @@ class TelegramDownloadHelper:
         with self.__resource_lock:
             return self.downloaded_bytes / (time() - self.__start_time)
 
-    def __onDownloadStart(self, name, size, file_id):
+    async def __onDownloadStart(self, name, size, file_id):
         with global_lock:
             GLOBAL_GID.add(file_id)
         with self.__resource_lock:
@@ -52,12 +53,12 @@ class TelegramDownloadHelper:
                 self, self.__listener, gid
             )
         self.__listener.onDownloadStart()
-        sendStatusMessage(self.__listener.message, self.__listener.bot)
+        await sendStatusMessage(self.__listener.c, self.__listener.m)
 
-    def __onDownloadProgress(self, current, total):
+    async def __onDownloadProgress(self, current, total):
         if self.__is_cancelled:
             self.__onDownloadError("Cancelled by user!")
-            app.stop_transmission()
+            await app.stop_transmission()
             return
         with self.__resource_lock:
             self.downloaded_bytes = current
@@ -66,35 +67,35 @@ class TelegramDownloadHelper:
             except ZeroDivisionError:
                 pass
 
-    def __onDownloadError(self, error):
+    async def __onDownloadError(self, error):
         with global_lock:
             try:
                 GLOBAL_GID.remove(self.__id)
             except:
                 pass
-        self.__listener.onDownloadError(error)
+        await self.__listener.onDownloadError(error)
 
-    def __onDownloadComplete(self):
+    async def __onDownloadComplete(self):
         with global_lock:
             GLOBAL_GID.remove(self.__id)
-        self.__listener.onDownloadComplete()
+        await self.__listener.onDownloadComplete()
 
-    def __download(self, message, path):
+    async def __download(self, message:Message, path):
         try:
-            download = message.download(
+            download = await message.download(
                 file_name=path, progress=self.__onDownloadProgress
             )
         except Exception as e:
             LOGGER.error(str(e))
-            return self.__onDownloadError(str(e))
+            return await self.__onDownloadError(str(e))
         if download is not None:
-            self.__onDownloadComplete()
+            await self.__onDownloadComplete()
         elif not self.__is_cancelled:
-            self.__onDownloadError("Internal error occurred")
+            await self.__onDownloadError("Internal error occurred")
 
-    def add_download(self, message, path, filename):
-        _dmsg = app.get_messages(
-            message.chat.id, reply_to_message_ids=message.message_id
+    async def add_download(self, message:Message, path, filename):
+        _dmsg:Message = await app.get_messages(
+            chat_id=message.chat.id, reply_to_message_ids=message.id
         )
         media = None
         media_array = [_dmsg.document, _dmsg.video, _dmsg.audio]
@@ -119,8 +120,8 @@ class TelegramDownloadHelper:
                     smsg, button = GoogleDriveHelper().drive_list(name, True, True)
                     if smsg:
                         msg = "File/Folder is already available in Drive.\nHere are the search results:"
-                        return sendMarkup(
-                            msg, self.__listener.bot, self.__listener.message, button
+                        return await sendMarkup(
+                            msg, self.__listener.c, self.__listener.m, button
                         )
                 if STORAGE_THRESHOLD is not None:
                     arch = any([self.__listener.isZip, self.__listener.extract])
@@ -130,12 +131,13 @@ class TelegramDownloadHelper:
                         msg += (
                             f"\nYour File/Folder size is {get_readable_file_size(size)}"
                         )
-                        return sendMessage(
-                            msg, self.__listener.bot, self.__listener.message
+                        return await sendMessage(
+                            msg, self.__listener.c, self.__listener.m
                         )
-                self.__onDownloadStart(name, size, media.file_id)
+                await self.__onDownloadStart(name, size, media.file_id)
                 LOGGER.info(f"Downloading Telegram file with id: {media.file_id}")
-                Thread(target=self.__download, args=(_dmsg, path)).start()
+                await self.__download(_dmsg,path)
+                #Thread(target=self.__download, args=(_dmsg, path)).start()
             else:
                 self.__onDownloadError("File already being downloaded!")
         else:

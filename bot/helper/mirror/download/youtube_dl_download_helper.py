@@ -94,22 +94,22 @@ class YoutubeDLHelper:
                 except ZeroDivisionError:
                     pass
 
-    def __onDownloadStart(self):
+    async def __onDownloadStart(self):
         with download_dict_lock:
             download_dict[self.__listener.uid] = YoutubeDLDownloadStatus(
                 self, self.__listener, self.__gid
             )
         self.__listener.onDownloadStart()
-        sendStatusMessage(self.__listener.message, self.__listener.bot)
+        await sendStatusMessage(self.__listener.m, self.__listener.c)
 
-    def __onDownloadComplete(self):
-        self.__listener.onDownloadComplete()
+    async def __onDownloadComplete(self):
+        await self.__listener.onDownloadComplete()
 
-    def __onDownloadError(self, error):
+    async def __onDownloadError(self, error):
         self.__is_cancelled = True
-        self.__listener.onDownloadError(error)
+        await self.__listener.onDownloadError(error)
 
-    def extractMetaData(self, link, name, args, get_info=False):
+    async def extractMetaData(self, link, name, args, get_info=False):
         if args is not None:
             self.__set_args(args)
         if get_info:
@@ -125,7 +125,7 @@ class YoutubeDLHelper:
             except Exception as e:
                 if get_info:
                     raise e
-                return self.__onDownloadError(str(e))
+                return await self.__onDownloadError(str(e))
         if "entries" in result:
             for v in result["entries"]:
                 try:
@@ -150,26 +150,26 @@ class YoutubeDLHelper:
             else:
                 self.name = f"{name}.{ext}"
 
-    def __download(self, link):
+    async def __download(self, link):
         try:
             with YoutubeDL(self.opts) as ydl:
                 try:
                     ydl.download([link])
                 except DownloadError as e:
                     if not self.__is_cancelled:
-                        self.__onDownloadError(str(e))
+                        await self.__onDownloadError(str(e))
                     return
             if self.__is_cancelled:
                 raise ValueError
-            self.__onDownloadComplete()
+            await self.__onDownloadComplete()
         except ValueError:
-            self.__onDownloadError("Download Stopped by User!")
+            await self.__onDownloadError("Download Stopped by User!")
 
-    def add_download(self, link, path, name, qual, playlist, args):
+    async def add_download(self, link, path, name, qual, playlist, args):
         if playlist:
             self.opts["ignoreerrors"] = True
         self.__gid = "".join(SystemRandom().choices(ascii_letters + digits, k=10))
-        self.__onDownloadStart()
+        await self.__onDownloadStart()
         if qual.startswith("ba/b"):
             audio_info = qual.split("-")
             qual = audio_info[0]
@@ -186,7 +186,7 @@ class YoutubeDLHelper:
             ]
         self.opts["format"] = qual
         LOGGER.info(f"Downloading with YT-DLP: {link}")
-        self.extractMetaData(link, name, args)
+        await self.extractMetaData(link, name, args)
         if self.__is_cancelled:
             return
         if STORAGE_THRESHOLD is not None:
@@ -194,18 +194,18 @@ class YoutubeDLHelper:
             if not acpt:
                 msg = f"You must leave {STORAGE_THRESHOLD}GB free storage."
                 msg += f"\nYour File/Folder size is {get_readable_file_size(self.size)}"
-                return self.__onDownloadError(msg)
+                return await self.__onDownloadError(msg)
         if not self.is_playlist:
             self.opts["outtmpl"] = f"{path}/{self.name}"
         else:
             self.opts["outtmpl"] = f"{path}/{self.name}/%(title)s.%(ext)s"
-        self.__download(link)
+        await self.__download(link)
 
-    def cancel_download(self):
+    async def cancel_download(self):
         self.__is_cancelled = True
         LOGGER.info(f"Cancelling Download: {self.name}")
         if not self.__downloading:
-            self.__onDownloadError("Download Cancelled by User!")
+            await self.__onDownloadError("Download Cancelled by User!")
 
     def __set_args(self, args):
         args = args.split("|")

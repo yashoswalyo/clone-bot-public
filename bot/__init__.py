@@ -27,7 +27,7 @@ setdefaulttimeout(600)
 botStartTime = time()
 
 basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    format="%(asctime)s - [%(filename)s:%(lineno)d] - %(levelname)s - %(message)s",
     handlers=[FileHandler("log.txt"), StreamHandler()],
     level=INFO,
 )
@@ -112,6 +112,32 @@ except:
     LOGGER.error("One or more env variables missing! Exiting now")
     exit(1)
 
+class CloneBot(Client):
+    async def start(self):
+        await super().start()
+        # for id in sorted(AUTHORIZED_CHATS.union(SUDO_USERS)):
+        #     try:
+        #         await self.send_message(
+        #             chat_id=id,
+        #             text="<b>Bot Started !</b>"
+        #         )
+        #     except:
+        #         pass
+        LOGGER.info("Bot Started!")
+        return
+    
+    async def stop(self):
+        # for id in sorted(AUTHORIZED_CHATS.union(SUDO_USERS)):
+        #     try:
+        #         await self.send_message(
+        #             chat_id=id,
+        #             text="<b>Bot Stopped !</b>"
+        #         )
+        #     except:
+        #         pass
+        LOGGER.info("Stopping Bot!")
+        return await super().stop()
+
 try:
     CHANNEL_ID = getConfig("CHANNEL_ID")
     if CHANNEL_ID.isdecimal():
@@ -125,12 +151,12 @@ try:
     if len(USER_SESSION_STRING) == 0:
         raise KeyError
     LOGGER.info("Generating USER_SESSION_STRING")
-    app = Client(name='pyrogram', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, session_string=USER_SESSION_STRING, parse_mode=enums.ParseMode.HTML, no_updates=True)
+    app = CloneBot(name='pyrogram', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, session_string=USER_SESSION_STRING, parse_mode=enums.ParseMode.HTML, plugins=dict(root="bot/functions"))
     with app:
         IS_PREMIUM_USER = app.get_me().is_premium
 except:
     LOGGER.info("Generating BOT_SESSION_STRING")
-    app = Client(name='pyrogram', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, bot_token=BOT_TOKEN, parse_mode=enums.ParseMode.HTML, no_updates=True)
+    app = CloneBot(name='pyrogram', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, bot_token=BOT_TOKEN, parse_mode=enums.ParseMode.HTML, plugins=dict(root="bot/functions"))
 
 
 try:
