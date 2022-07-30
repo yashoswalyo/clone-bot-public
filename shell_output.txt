@@ -1,0 +1,161 @@
+*Stdout*
+<code>bot:
+total 44
+drwxrwxr-x 3 yashoswal yashoswal  4096 Jul 27 23:08 functions
+drwxrwxr-x 5 yashoswal yashoswal  4096 Jul 25 21:17 helper
+-rw-rw-r-- 1 yashoswal yashoswal 14088 Jul 29 20:00 __init__.py
+-rw-rw-r-- 1 yashoswal yashoswal 12489 Jul 26 21:31 __main__.py
+drwxrwxr-x 2 yashoswal yashoswal  4096 Jul 29 20:10 __pycache__
+
+bot/functions:
+total 108
+-rw-rw-r-- 1 yashoswal yashoswal  5989 Jul 26 22:16 auth.py
+-rw-rw-r-- 1 yashoswal yashoswal  4381 Jul 27 22:42 cancel_mirror.py
+-rw-rw-r-- 1 yashoswal yashoswal  5863 Jul 26 23:39 clone.py
+-rw-rw-r-- 1 yashoswal yashoswal  1596 Jul 26 23:37 count.py
+-rw-rw-r-- 1 yashoswal yashoswal  1573 Jul 27 22:46 delete.py
+-rw-rw-r-- 1 yashoswal yashoswal  4262 Jul 27 23:13 eval.py
+-rw-rw-r-- 1 yashoswal yashoswal     0 Jul 25 21:17 __init__.py
+-rw-rw-r-- 1 yashoswal yashoswal  5428 Jul 28 22:55 leech_settings.py
+-rw-rw-r-- 1 yashoswal yashoswal  2170 Jul 28 22:58 list.py
+-rw-rw-r-- 1 yashoswal yashoswal 22842 Jul 29 20:06 mirror.py
+-rw-rw-r-- 1 yashoswal yashoswal  2114 Jul 28 23:07 mirror_status.py
+drwxrwxr-x 2 yashoswal yashoswal  4096 Jul 29 20:11 __pycache__
+-rw-rw-r-- 1 yashoswal yashoswal  1533 Jul 29 20:11 shell.py
+-rw-rw-r-- 1 yashoswal yashoswal     1 Jul 27 23:09 temp.txt
+-rw-rw-r-- 1 yashoswal yashoswal 12452 Jul 25 21:17 watch.py
+
+bot/functions/__pycache__:
+total 80
+-rw-rw-r-- 1 yashoswal yashoswal  4055 Jul 26 22:31 auth.cpython-310.pyc
+-rw-rw-r-- 1 yashoswal yashoswal  3532 Jul 27 23:08 cancel_mirror.cpython-310.pyc
+-rw-rw-r-- 1 yashoswal yashoswal  4551 Jul 27 23:08 clone.cpython-310.pyc
+-rw-rw-r-- 1 yashoswal yashoswal  1568 Jul 27 23:08 count.cpython-310.pyc
+-rw-rw-r-- 1 yashoswal yashoswal  1458 Jul 27 23:08 delete.cpython-310.pyc
+-rw-rw-r-- 1 yashoswal yashoswal  4014 Jul 28 21:01 eval.cpython-310.pyc
+-rw-rw-r-- 1 yashoswal yashoswal   183 Jul 25 21:20 __init__.cpython-310.pyc
+-rw-rw-r-- 1 yashoswal yashoswal  4357 Jul 28 23:07 leech_settings.cpython-310.pyc
+-rw-rw-r-- 1 yashoswal yashoswal  2469 Jul 28 23:07 list.cpython-310.pyc
+-rw-rw-r-- 1 yashoswal yashoswal 15222 Jul 29 20:10 mirror.cpython-310.pyc
+-rw-rw-r-- 1 yashoswal yashoswal  2319 Jul 28 23:07 mirror_status.cpython-310.pyc
+-rw-rw-r-- 1 yashoswal yashoswal  1721 Jul 29 20:11 shell.cpython-310.pyc
+-rw-rw-r-- 1 yashoswal yashoswal  8712 Jul 25 21:20 watch.cpython-310.pyc
+
+bot/helper:
+total 12
+drwxrwxr-x 6 yashoswal yashoswal 4096 Jul 25 21:20 mirror
+drwxrwxr-x 3 yashoswal yashoswal 4096 Jul 25 21:20 others
+drwxrwxr-x 3 yashoswal yashoswal 4096 Jul 25 21:20 tg_helper
+
+bot/helper/mirror:
+total 16
+drwxrwxr-x 3 yashoswal yashoswal 4096 Jul 25 21:20 download
+-rw-rw-r-- 1 yashoswal yashoswal    0 Jul 25 21:17 __init__.py
+drwxrwxr-x 2 yashoswal yashoswal 4096 Jul 25 21:20 __pycache__
+drwxrwxr-x 3 yashoswal yashoswal 4096 Jul 25 21:20 status
+drwxrwxr-x 3 yashoswal yashoswal 4096 Jul 25 21:20 upload
+
+bot/helper/mirror/download:
+total 36
+-rw-rw-r-- 1 yashoswal yashoswal 2914 Jul 28 23:25 gd_downloader.py
+-rw-rw-r-- 1 yashoswal yashoswal    0 Jul 25 21:17 __init__.py
+-rw-rw-r-- 1 yashoswal yashoswal 9844 Jul 25 21:17 link_generator.py
+drwxrwxr-x 2 yashoswal yashoswal 4096 Jul 29 19:59 __pycache__
+-rw-rw-r-- 1 yashoswal yashoswal 5436 Jul 25 21:17 telegram_downloader.py
+-rw-rw-r-- 1 yashoswal yashoswal 7958 Jul 25 21:17 youtube_dl_download_helper.py
+
+bot/helper/mirror/download/__pycache__:
+total 32
+-rw-rw-r-- 1 yashoswal yashoswal 2371 Jul 29 19:59 gd_downloader.cpython-310.pyc
+-rw-rw-r-- 1 yashoswal yashoswal  196 Jul 25 21:20 __init__.cpython-310.pyc
+-rw-rw-r-- 1 yashoswal yashoswal 7749 Jul 25 21:20 link_generator.cpython-310.pyc
+-rw-rw-r-- 1 yashoswal yashoswal 5533 Jul 25 21:20 telegram_downloader.cpython-310.pyc
+-rw-rw-r-- 1 yashoswal yashoswal 7534 Jul 25 21:20 youtube_dl_download_helper.cpython-310.pyc
+
+bot/helper/mirror/__pycache__:
+total 4
+-rw-rw-r-- 1 yashoswal yashoswal 187 Jul 25 21:20 __init__.cpython-310.pyc
+
+bot/helper/mirror/status:
+total 40
+-rw-rw-r-- 1 yashoswal yashoswal 1397 Jul 25 21:17 clone_status.py
+-rw-rw-r-- 1 yashoswal yashoswal  784 Jul 25 21:17 extract_status.py
+-rw-rw-r-- 1 yashoswal yashoswal 1545 Jul 25 21:17 gd_download_status.py
+-rw-rw-r-- 1 yashoswal yashoswal    0 Jul 25 21:17 __init__.py
+drwxrwxr-x 2 yashoswal yashoswal 4096 Jul 25 21:20 __pycache__
+-rw-rw-r-- 1 yashoswal yashoswal  631 Jul 25 21:17 split_status.py
+-rw-rw-r-- 1 yashoswal yashoswal 1424 Jul 25 21:17 telegram_download_status.py
+-rw-rw-r-- 1 yashoswal yashoswal 1530 Jul 25 21:17 tg_upload_status.py
+-rw-rw-r-- 1 yashoswal yashoswal 1530 Jul 25 21:17 upload_status.py
+-rw-rw-r-- 1 yashoswal yashoswal 1587 Jul 25 21:17 youtube_dl_download_status.py
+-rw-rw-r-- 1 yashoswal yashoswal  629 Jul 25 21:17 zip_status.py
+
+bot/helper/mirror/status/__pycache__:
+total 40
+-rw-rw-r-- 1 yashoswal yashoswal 2546 Jul 25 21:20 clone_status.cpython-310.pyc
+-rw-rw-r-- 1 yashoswal yashoswal 1668 Jul 25 21:20 extract_status.cpython-310.pyc
+-rw-rw-r-- 1 yashoswal yashoswal 2863 Jul 25 21:20 gd_download_status.cpython-310.pyc
+-rw-rw-r-- 1 yashoswal yashoswal  194 Jul 25 21:20 __init__.cpython-310.pyc
+-rw-rw-r-- 1 yashoswal yashoswal 1639 Jul 25 21:20 split_status.cpython-310.pyc
+-rw-rw-r-- 1 yashoswal yashoswal 2852 Jul 25 21:20 telegram_download_status.cpython-310.pyc
+-rw-rw-r-- 1 yashoswal yashoswal 2804 Jul 25 21:20 tg_upload_status.cpython-310.pyc
+-rw-rw-r-- 1 yashoswal yashoswal 2773 Jul 25 21:20 upload_status.cpython-310.pyc
+-rw-rw-r-- 1 yashoswal yashoswal 2969 Jul 25 21:20 youtube_dl_download_status.cpython-310.pyc
+-rw-rw-r-- 1 yashoswal yashoswal 1611 Jul 25 21:20 zip_status.cpython-310.pyc
+
+bot/helper/mirror/upload:
+total 64
+-rw-rw-r-- 1 yashoswal yashoswal 44015 Jul 26 23:27 gdrive_helper.py
+-rw-rw-r-- 1 yashoswal yashoswal     0 Jul 25 21:17 __init__.py
+drwxrwxr-x 2 yashoswal yashoswal  4096 Jul 26 23:27 __pycache__
+-rw-rw-r-- 1 yashoswal yashoswal 13136 Jul 25 21:17 pyrogramEngine.py
+
+bot/helper/mirror/upload/__pycache__:
+total 40
+-rw-rw-r-- 1 yashoswal yashoswal 27809 Jul 26 23:27 gdrive_helper.cpython-310.pyc
+-rw-rw-r-- 1 yashoswal yashoswal   194 Jul 25 21:20 __init__.cpython-310.pyc
+-rw-rw-r-- 1 yashoswal yashoswal  6916 Jul 25 21:20 pyrogramEngine.cpython-310.pyc
+
+bot/helper/others:
+total 52
+-rw-rw-r-- 1 yashoswal yashoswal 11643 Jul 26 20:53 bot_utils.py
+-rw-rw-r-- 1 yashoswal yashoswal  9231 Jul 25 21:17 database_handler.py
+-rw-rw-r-- 1 yashoswal yashoswal   269 Jul 25 21:17 exceptions.py
+-rw-rw-r-- 1 yashoswal yashoswal 10605 Jul 25 21:17 fs_utils.py
+-rw-rw-r-- 1 yashoswal yashoswal     0 Jul 25 21:17 __init__.py
+drwxrwxr-x 2 yashoswal yashoswal  4096 Jul 26 20:54 __pycache__
+-rw-rw-r-- 1 yashoswal yashoswal  2335 Jul 25 21:17 shortenurl.py
+-rw-rw-r-- 1 yashoswal yashoswal  3128 Jul 25 22:04 telegraph_helper.py
+
+bot/helper/others/__pycache__:
+total 44
+-rw-rw-r-- 1 yashoswal yashoswal 10003 Jul 26 20:54 bot_utils.cpython-310.pyc
+-rw-rw-r-- 1 yashoswal yashoswal  8007 Jul 25 21:20 database_handler.cpython-310.pyc
+-rw-rw-r-- 1 yashoswal yashoswal   654 Jul 25 21:20 exceptions.cpython-310.pyc
+-rw-rw-r-- 1 yashoswal yashoswal  7555 Jul 25 21:20 fs_utils.cpython-310.pyc
+-rw-rw-r-- 1 yashoswal yashoswal   187 Jul 25 21:20 __init__.cpython-310.pyc
+-rw-rw-r-- 1 yashoswal yashoswal  1933 Jul 25 21:20 shortenurl.cpython-310.pyc
+-rw-rw-r-- 1 yashoswal yashoswal  2605 Jul 25 22:04 telegraph_helper.cpython-310.pyc
+
+bot/helper/tg_helper:
+total 24
+-rw-rw-r-- 1 yashoswal yashoswal 1051 Jul 25 21:17 filters.py
+-rw-rw-r-- 1 yashoswal yashoswal    0 Jul 25 21:17 __init__.py
+-rw-rw-r-- 1 yashoswal yashoswal 1831 Jul 25 21:17 list_of_commands.py
+-rw-rw-r-- 1 yashoswal yashoswal  663 Jul 25 21:50 make_buttons.py
+-rw-rw-r-- 1 yashoswal yashoswal 4397 Jul 28 22:32 msg_utils.py
+drwxrwxr-x 2 yashoswal yashoswal 4096 Jul 28 22:32 __pycache__
+
+bot/helper/tg_helper/__pycache__:
+total 24
+-rw-rw-r-- 1 yashoswal yashoswal 2169 Jul 25 21:20 filters.cpython-310.pyc
+-rw-rw-r-- 1 yashoswal yashoswal  190 Jul 25 21:20 __init__.cpython-310.pyc
+-rw-rw-r-- 1 yashoswal yashoswal 1842 Jul 25 21:20 list_of_commands.cpython-310.pyc
+-rw-rw-r-- 1 yashoswal yashoswal 1331 Jul 25 21:52 make_buttons.cpython-310.pyc
+-rw-rw-r-- 1 yashoswal yashoswal 4347 Jul 28 22:32 msg_utils.cpython-310.pyc
+
+bot/__pycache__:
+total 24
+-rw-rw-r-- 1 yashoswal yashoswal  9267 Jul 29 20:10 __init__.cpython-310.pyc
+-rw-rw-r-- 1 yashoswal yashoswal 10871 Jul 26 21:38 __main__.cpython-310.pyc
+</code>
