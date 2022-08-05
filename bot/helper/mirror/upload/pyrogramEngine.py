@@ -134,7 +134,7 @@ class TgUploader:
         notMedia = False
         thumb = self.__thumb
         try:
-            if int(CHANNEL_ID):
+            if CHANNEL_ID is not None:
                 if not self.__as_doc:
                     duration = 0
                     if file_.upper().endswith(VIDEO_SUFFIXES):
