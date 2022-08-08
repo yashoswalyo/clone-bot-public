@@ -61,6 +61,6 @@ async def add_gd_download(link, listener, is_gdtot, is_unified, is_udrive, is_sh
         download_dict[listener.uid] = download_status
     listener.onDownloadStart()
     await sendStatusMessage(listener.c, listener.m)
-    drive.download(link)
+    await drive.download(link)
     if (is_gdtot or is_unified or is_udrive or is_sharer):
         drive.deletefile(link)
