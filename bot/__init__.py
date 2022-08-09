@@ -113,29 +113,29 @@ except:
     exit(1)
 
 class CloneBot(Client):
-    async def start(self):
-        await super().start()
+    def start(self):
+        super().start()
         for id in sorted(AUTHORIZED_CHATS.union(SUDO_USERS)):
             try:
-                await self.send_message(
+                self.send_message(
                     chat_id=int(id),
-                    text="<b>Bot Started !</b>"
+                    text="<b>Bot Started!</b>"
                 )
             except:
                 pass
-        return LOGGER.info("Bot Started!")
+        return
     
-    async def stop(self):
+    def stop(self):
         for id in sorted(AUTHORIZED_CHATS.union(SUDO_USERS)):
             try:
-                await self.send_message(
+                self.send_message(
                     chat_id=int(id),
-                    text="<b>Bot Stopped !</b>"
+                    text="<b>Bot Stopped!</b>"
                 )
             except:
                 pass
         LOGGER.info("Stopping Bot!")
-        return await super().stop()
+        return super().stop()
 
 
 try:
