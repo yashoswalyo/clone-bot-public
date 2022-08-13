@@ -2,7 +2,7 @@ from base64 import b64encode
 from requests import get as rget, utils as rutils
 from re import match as re_match, search as re_search, split as re_split
 from time import sleep, time
-from os import path as ospath, remove as osremove, listdir, walk
+from os import path as ospath, remove as osremove, listdir, walk, rename as osrename
 from shutil import rmtree
 from threading import Thread
 from subprocess import run as srun
@@ -113,7 +113,7 @@ class MirrorListener:
                 self.message.chat.id, self.message.link, self.tag
             )
 
-    def onDownloadComplete(self):
+    def onDownloadComplete(self,new_name=None):
         with download_dict_lock:
             LOGGER.info(f"Download completed: {download_dict[self.uid].name()}")
             download = download_dict[self.uid]
@@ -126,6 +126,9 @@ class MirrorListener:
                 or not ospath.exists(f"{DOWNLOAD_DIR}{self.uid}/{name}")
             ):
                 name = listdir(f"{DOWNLOAD_DIR}{self.uid}")[-1]
+            if new_name is not None:
+                osrename(f"{DOWNLOAD_DIR}{self.uid}/{name}",f"{DOWNLOAD_DIR}{self.uid}/{new_name}")
+                name = new_name
             m_path = f"{DOWNLOAD_DIR}{self.uid}/{name}"
         if self.isZip:
             try:
@@ -523,7 +526,8 @@ def _mirror(
             gmsg += f"Use /{BotCommands.UnzipMirrorCommand} to extracts Google Drive archive file"
             sendMessage(gmsg, bot, message)
         else:
-            Thread(target=add_gd_download, args=(link, listener, is_gdtot, is_unified, is_udrive, is_sharer, is_drivehubs)).start()
+            LOGGER.info(name)
+            Thread(target=add_gd_download, args=(link, listener, is_gdtot, is_unified, is_udrive, is_sharer, is_drivehubs, name)).start()
 
     if multi > 1:
         sleep(3)
