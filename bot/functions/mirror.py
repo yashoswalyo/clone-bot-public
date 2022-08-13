@@ -406,7 +406,7 @@ def _mirror(
         name = name.split(" pswd: ")[0]
         name = name.strip()
     except:
-        name = ""
+        name = None
     link = re_split(r"pswd:| \|", link)[0]
     link = link.strip()
     pswdMsg = mesg[0].split(" pswd: ")
@@ -526,7 +526,7 @@ def _mirror(
             gmsg += f"Use /{BotCommands.UnzipMirrorCommand} to extracts Google Drive archive file"
             sendMessage(gmsg, bot, message)
         else:
-            LOGGER.info(name)
+            LOGGER.info(f"New Name: {name}")
             Thread(target=add_gd_download, args=(link, listener, is_gdtot, is_unified, is_udrive, is_sharer, is_drivehubs, name)).start()
 
     if multi > 1:
