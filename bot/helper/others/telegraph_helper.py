@@ -4,6 +4,7 @@ from string import ascii_letters
 from random import SystemRandom
 
 from time import sleep
+from bot import LOGGER
 # from telegraph import Telegraph
 # from telegraph.exceptions import RetryAfterError
 from .telegraph.api import Telegraph
@@ -27,7 +28,7 @@ class TelegraphHelper:
             author_url=self.author_url,
         )
         self.access_token = self.telegraph.get_access_token()
-        print(f"Creating TELEGRAPH Account using  '{self.short_name}' name")
+        LOGGER.info(f"Creating TELEGRAPH Account using  '{self.short_name}' name")
 
     def create_page(self, title, content):
         try:
@@ -38,7 +39,7 @@ class TelegraphHelper:
                 html_content=content,
             )
         except RetryAfterError as st:
-            print(
+            LOGGER.warning(
                 f"Telegraph Flood control exceeded. I will sleep for {st.retry_after} seconds."
             )
             sleep(st.retry_after)
