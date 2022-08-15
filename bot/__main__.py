@@ -189,15 +189,13 @@ help_string_telegraph = f"""<br>
 <br><br>
 <b>/{BotCommands.ListCommand}</b> [query]: Search in Google Drive(s)
 <br><br>
-<b>/{BotCommands.SearchCommand}</b> [query]: Search for ts with API
-<br>sites: <code>rarbg, 1337x, yts, etzv, tgx, torlock, piratebay, nyaasi, ettv</code><br><br>
 <b>/{BotCommands.StatusCommand}</b>: Shows a status of all the downloads
 <br><br>
 <b>/{BotCommands.StatsCommand}</b>: Show Stats of the machine the bot is hosted on
 """
 
 help = telegraph.create_page(
-    title="Mirror-Leech-Bot Help",
+    title="Clone-Bot Help",
     content=help_string_telegraph,
 )["path"]
 
@@ -226,7 +224,7 @@ help_string = f"""
 
 def bot_help(update, context):
     button = ButtonMaker()
-    button.buildbutton("Other Commands", f"https://telegra.ph/{help}")
+    button.buildbutton("Other Commands", f"https://{telegraph.api_url}/{help}")
     reply_markup = InlineKeyboardMarkup(button.build_menu(1))
     sendMarkup(help_string, context.bot, update.message, reply_markup)
 
