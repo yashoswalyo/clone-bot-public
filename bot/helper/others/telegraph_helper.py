@@ -4,15 +4,16 @@ from string import ascii_letters
 from random import SystemRandom
 
 from time import sleep
-from telegraph import Telegraph
-from telegraph.exceptions import RetryAfterError
-
-from bot import LOGGER
+# from telegraph import Telegraph
+# from telegraph.exceptions import RetryAfterError
+from .telegraph.api import Telegraph
+from .telegraph.exceptions import RetryAfterError
 
 
 class TelegraphHelper:
     def __init__(self, author_name=None, author_url=None):
-        self.telegraph = Telegraph()
+        self.api_url = "graph.org"  # ...
+        self.telegraph = Telegraph(api_url=self.api_url)
         self.short_name = "".join(SystemRandom().choices(ascii_letters, k=8))
         self.access_token = None
         self.author_name = author_name
@@ -26,7 +27,7 @@ class TelegraphHelper:
             author_url=self.author_url,
         )
         self.access_token = self.telegraph.get_access_token()
-        LOGGER.info(f"Creating TELEGRAPH Account using  '{self.short_name}' name")
+        print(f"Creating TELEGRAPH Account using  '{self.short_name}' name")
 
     def create_page(self, title, content):
         try:
@@ -37,7 +38,7 @@ class TelegraphHelper:
                 html_content=content,
             )
         except RetryAfterError as st:
-            LOGGER.warning(
+            print(
                 f"Telegraph Flood control exceeded. I will sleep for {st.retry_after} seconds."
             )
             sleep(st.retry_after)
@@ -53,7 +54,7 @@ class TelegraphHelper:
                 html_content=content,
             )
         except RetryAfterError as st:
-            LOGGER.warning(
+            print(
                 f"Telegraph Flood control exceeded. I will sleep for {st.retry_after} seconds."
             )
             sleep(st.retry_after)
@@ -66,22 +67,22 @@ class TelegraphHelper:
         for content in telegraph_content:
             if nxt_page == 1:
                 content += (
-                    f'<b><a href="https://telegra.ph/{path[nxt_page]}">Next</a></b>'
+                    f'<b><a href="https://{self.api_url}/{path[nxt_page]}">Next</a></b>'
                 )
                 nxt_page += 1
             else:
                 if prev_page <= num_of_path:
-                    content += f'<b><a href="https://telegra.ph/{path[prev_page]}">Prev</a></b>'
+                    content += f'<b><a href="https://{self.api_url}/{path[prev_page]}">Prev</a></b>'
                     prev_page += 1
                 if nxt_page < num_of_path:
-                    content += f'<b> | <a href="https://telegra.ph/{path[nxt_page]}">Next</a></b>'
+                    content += f'<b> | <a href="https://{self.api_url}/{path[nxt_page]}">Next</a></b>'
                     nxt_page += 1
             self.edit_page(
-                path=path[prev_page], title="Mirror-leech-bot  Search", content=content
+                path=path[prev_page], title="Clone-Bot  Search", content=content
             )
         return
 
 
 telegraph = TelegraphHelper(
-    "Mirror-Leech-Telegram-Bot", "https://github.com/anasty17/mirror-leech-telegram-bot"
+    "Clone-Bot", "https://github.com/yashoswalyo/clone-bot-public"
 )
