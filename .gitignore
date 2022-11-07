@@ -4,3 +4,4 @@ config.env
 log*
 accounts
 token.pickle
+.vscode
