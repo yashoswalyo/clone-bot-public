@@ -407,6 +407,12 @@ try:
 except:
     DRIVEFIRE_CRYPT = None
 try:
+    SHAREDRIVE_PHPCKS = getConfig("SHAREDRIVE_PHPCKS")
+    if len(SHAREDRIVE_PHPCKS) == 0:
+        raise KeyError
+except:
+    SHAREDRIVE_PHPCKS = None
+try:
     TOKEN_PICKLE_URL = getConfig("TOKEN_PICKLE_URL")
     if len(TOKEN_PICKLE_URL) == 0:
         raise KeyError
