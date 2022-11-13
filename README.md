@@ -21,7 +21,7 @@ btw you can leech from google drive
 - Zip/Unzip G-Drive links
 - Counting files/folders from Google Drive link
 - Direct Clone from 
-  > GDToT, AppDrive, DriveApp, DriveLinks, DriveAce, DriveBit, DriveSharer, GDFlix, DriveRoot, DriveFlix, DriveHub.in, AniDrive, IndiDrive, HubDrive, KatDrive, DriveHub.ws, Kolop, DriveFire, DriveBuzz and Sharer.pw links
+  > GDToT, AppDrive, DriveApp, DriveLinks, DriveAce, DriveBit, DriveSharer, GDFlix, DriveRoot, DriveFlix, DriveHub.in, AniDrive, IndiDrive, HubDrive, KatDrive, DriveHub.ws, Kolop, DriveFire, DriveBuzz, Sharer.pw and ShareDrive links
 - View Link button, extra button to open file index link in broswer instead of direct download
 - Status Pages for unlimited tasks
 - Clone status
