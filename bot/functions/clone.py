@@ -59,8 +59,8 @@ def _clone(message, bot, multi=0):
     is_unified = is_unified_link(link)
     is_udrive = is_udrive_link(link)
     is_sharer = is_sharer_link(link)
-    is_drivehubs = is_drivehubs_link(link)
-    if (is_gdtot or is_unified or is_udrive or is_sharer or is_drivehubs):
+    is_sharedrive = is_sharedrive_link(link)
+    if (is_gdtot or is_unified or is_udrive or is_sharer or is_sharedrive):
         try:
             msg = sendMessage(f"<b>Processing:</b> <code>{link}</code>", bot, message)
             LOGGER.info(f"Processing: {link}")
@@ -72,8 +72,8 @@ def _clone(message, bot, multi=0):
                 link = udrive(link)
             if is_sharer:
                 link = sharer_pw_dl(link)
-            if is_drivehubs:
-                link = drivehubs(link)
+            if is_sharedrive:
+                link = shareDrive(link)
             deleteMessage(bot, msg)
         except DirectDownloadLinkException as e:
             deleteMessage(bot, msg)
@@ -141,11 +141,15 @@ def _clone(message, bot, multi=0):
         else:
             sendMarkup(result + cc, bot, message, button)
             LOGGER.info(f"Cloning Done: {name}")
-        if (is_gdtot or is_unified or is_udrive or is_sharer):
-            gd.deletefile(link)
+        if (is_gdtot or is_unified or is_udrive or is_sharer or is_sharedrive):
+            try:
+                LOGGER.info(f"Deleting: {link}")
+                gd.deleteFile(link)
+            except:
+                LOGGER.info(f"This file cannot be deleted!!, maybe this file is not in your google drive account!")
     else:
         sendMessage(
-            "Send Gdrive or GDToT/AppDrive/DriveApp/GDFlix/DriveAce/DriveLinks/DriveBit/DriveSharer/Anidrive/Driveroot/Driveflix/Indidrive/drivehub(in)/HubDrive/DriveHub(ws)/KatDrive/Kolop/DriveFire/DriveBuzz/SharerPw Link along with command or by replying to the link by command",
+            "Send Gdrive or GDToT/AppDrive/DriveApp/GDFlix/DriveAce/DriveLinks/DriveBit/DriveSharer/Anidrive/Driveroot/Driveflix/Indidrive/drivehub(in)/HubDrive/DriveHub(ws)/KatDrive/Kolop/DriveFire/DriveBuzz/SharerPw/ShareDrive Link along with command or by replying to the link by command",
             bot,
             message,
         )
