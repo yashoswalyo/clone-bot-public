@@ -19,6 +19,7 @@ import base64
 import cloudscraper
 from lxml import etree
 from urllib.parse import urlparse, parse_qs
+from bs4 import BeutifulSoup
 import requests
 
 def direct_link_generator(link: str):
@@ -239,7 +240,7 @@ def udrive(url: str) -> str:
 
 def sharer_pw_dl(url: str)-> str:
     
-    client = requests.Session()
+    client = cloudscraper.create_scraper(delay=10, browser='chrome')
     client.cookies["XSRF-TOKEN"] = XSRF_TOKEN
     client.cookies["laravel_session"] = laravel_session
     
@@ -257,9 +258,12 @@ def sharer_pw_dl(url: str)-> str:
         if drive_link["message"] == "OK":
             raise DirectDownloadLinkException("Something went wrong. Could not generate GDrive URL for your Sharer Link")
         else:
-            raise DirectDownloadLinkException(drive_link["message"])
+            finalMsg = BeautifulSoup(drive_link["message"], "lxml").text
+            raise DirectDownloadLinkException(finalMsg)
         
 def shareDrive(url,directLogin=True):
+
+    successMsgs = ['success', 'Success', 'SUCCESS']
 
     scrapper = requests.Session()
 
@@ -277,7 +281,16 @@ def shareDrive(url,directLogin=True):
         'X-Requested-With	' : 'XMLHttpRequest'
     }
 
-    if directLogin==False:
+    if directLogin==True:
+        cookies = {
+            'PHPSESSID' : PHPSESSID
+        }
+
+        data = {
+            'id' : url.rsplit('/',1)[1],
+            'key' : 'direct'
+        }
+    else:
         cookies = {
             'PHPSESSID' : PHPSESSID,
             'PHPCKS' : SHAREDRIVE_PHPCKS
@@ -287,29 +300,19 @@ def shareDrive(url,directLogin=True):
             'id' : url.rsplit('/',1)[1],
             'key' : 'original'
         }
-    else:
-        cookies = {
-            'PHPSESSID' : PHPSESSID
-        }
-
-        data = {
-            'id' : url.rsplit('/',1)[1],
-            'key' : 'direct'
-        }
-
     
     resp = scrapper.post(f'https://{urlparse(url).netloc}/post', headers=headers, data=data, cookies=cookies)
+    toJson = resp.json()
 
-    if directLogin==False:
-        driveUrl = resp['redirect']
-        return driveUrl
-    else:
-        try:
-            toJson = resp.json()
+    if directLogin==True:
+        if toJson['message'] in successMsgs:
             driveUrl = toJson['redirect']
             return driveUrl
-        except:
-            if (len(SHAREDRIVE_PHPCKS)>0 and directLogin!=False):
-                shareDrive(url,directLogin=False)
-            else:
-                raise DirectDownloadLinkException('Direct Login is not there and you have not provided PHPCKS cookie value!!')
+        else:
+            shareDrive(url,directLogin=False)
+    else:
+        if toJson['message'] in successMsgs:
+            driveUrl = toJson['redirect']
+            return driveUrl
+        else:
+            raise DirectDownloadLinkException(toJson['message'])
