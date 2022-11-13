@@ -7,14 +7,13 @@ from bot import (
     DRIVEFIRE_CRYPT,
     XSRF_TOKEN,
     laravel_session,
+    SHAREDRIVE_PHPCKS
 )
 from bot.helper.others.bot_utils import *
 from bot.helper.others.exceptions import DirectDownloadLinkException
 import re
 import os
 from time import sleep
-from selenium import webdriver
-from selenium.webdriver.common.by import By
 
 import base64
 import cloudscraper
@@ -31,8 +30,8 @@ def direct_link_generator(link: str):
         return udrive(link)
     elif is_sharer_link(link):
         return sharer_pw_dl(link)
-    elif is_drivehubs_link(link):
-        return drivehubs(link)
+    elif is_sharedrive_link(link):
+        return shareDrive(link)
     else:
         raise DirectDownloadLinkException(f'No Direct link function found for {link}')
 
@@ -169,12 +168,6 @@ def parse_info(res, url):
     info_parsed = {}
     if 'drivebuzz' in url:
         info_chunks = re.findall('<td\salign="right">(.*?)<\/td>', res.text)
-    elif 'sharer.pw' in url:
-        f = re.findall(">(.*?)<\/td>", res.text)
-        info_parsed = {}
-        for i in range(0, len(f), 3):
-            info_parsed[f[i].lower().replace(" ", "_")] = f[i + 2]
-        return info_parsed
     else:
         info_chunks = re.findall(">(.*?)<\/td>", res.text)
     for i in range(0, len(info_chunks), 2):
@@ -244,75 +237,79 @@ def udrive(url: str) -> str:
     return flink
     
 
-
-def sharer_pw_dl(url, forced_login=False):
+def sharer_pw_dl(url: str)-> str:
     
-    client = cloudscraper.create_scraper(delay=10, browser="chrome")
+    client = requests.Session()
+    client.cookies["XSRF-TOKEN"] = XSRF_TOKEN
+    client.cookies["laravel_session"] = laravel_session
     
-    client.cookies.update(
-        {"XSRF-TOKEN": XSRF_TOKEN, "laravel_session": laravel_session}
-    )
-
     res = client.get(url)
-    token = re.findall("token\s=\s'(.*?)'", res.text, re.DOTALL)[0]
+    token = re.findall("_token\s=\s'(.*?)'", res.text, re.DOTALL)[0]
+    data = { '_token': token, 'nl' :1}
+    headers={ 'content-type': 'application/x-www-form-urlencoded; charset=UTF-8', 'x-requested-with': 'XMLHttpRequest'}
 
-    ddl_btn = etree.HTML(res.content).xpath("//button[@id='btndirect']")
+    try:
+        response = client.post(url+'/dl', headers=headers, data=data).json()
+        drive_link = response
+        return drive_link['url']
+    
+    except:
+        if drive_link["message"] == "OK":
+            raise DirectDownloadLinkException("Something went wrong. Could not generate GDrive URL for your Sharer Link")
+        else:
+            raise DirectDownloadLinkException(drive_link["message"])
+        
+def shareDrive(url,directLogin=True):
 
-    info_parsed = parse_info(res, url)
-    info_parsed["error"] = True
-    info_parsed["src_url"] = url
-    info_parsed["link_type"] = "login"  # direct/login
-    info_parsed["forced_login"] = forced_login
+    scrapper = requests.Session()
+
+    #retrieving session PHPSESSID
+    cook = scrapper.get(url)
+    cookies = cook.cookies.get_dict()
+    PHPSESSID = cookies['PHPSESSID']
 
     headers = {
-        "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
-        "x-requested-with": "XMLHttpRequest",
+        'authority' : urlparse(url).netloc,
+        'Content-Type' : 'application/x-www-form-urlencoded; charset=UTF-8',
+        'Origin' : f'https://{urlparse(url).netloc}/',
+        'referer' : url,
+        'User-Agent' : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36 Edg/107.0.1418.35',
+        'X-Requested-With	' : 'XMLHttpRequest'
     }
 
-    data = {"_token": token}
+    if directLogin==False:
+        cookies = {
+            'PHPSESSID' : PHPSESSID,
+            'PHPCKS' : SHAREDRIVE_PHPCKS
+        }
 
-    if len(ddl_btn):
-        info_parsed["link_type"] = "direct"
-    if not forced_login:
-        data["nl"] = 1
-
-    try:
-        res = client.post(url + "/dl", headers=headers, data=data).json()
-    except:
-        return info_parsed
-
-    if "url" in res and res["url"]:
-        info_parsed["error"] = False
-        info_parsed["gdrive_link"] = res["url"]
-
-    if len(ddl_btn) and not forced_login and not "url" in info_parsed:
-        # retry download via login
-        return sharer_pw_dl(url, forced_login=True)
-
-    try:
-        flink = info_parsed["gdrive_link"]
-        return flink
-    except:
-        raise DirectDownloadLinkException(
-            "ERROR! File Not Found or User rate exceeded !!"
-        )
-        
-def drivehubs(url: str) -> str:
-    os.chmod('/usr/src/app/chromedriver', 755)
-    chrome_options = webdriver.ChromeOptions()
-    chrome_options.add_argument('--headless')
-    chrome_options.add_argument('--no-sandbox')
-    chrome_options.add_argument('--disable-dev-shm-usage')
-    wd = webdriver.Chrome('/usr/src/app/chromedriver', chrome_options=chrome_options)
-    
-    Ok = wd.get(url)
-    wd.find_element(By.XPATH, '//button[@id="fast"]').click()
-    sleep(10)
-    wd.switch_to.window(wd.window_handles[-1])
-    flink = wd.current_url
-    wd.close()
-    
-    if 'drive.google.com' in flink:
-      return flink
+        data = {
+            'id' : url.rsplit('/',1)[1],
+            'key' : 'original'
+        }
     else:
-      raise DirectDownloadLinkException(f"ERROR! Maybe Direct Download is not working for this file !\n Retrived URL : {flink}")
+        cookies = {
+            'PHPSESSID' : PHPSESSID
+        }
+
+        data = {
+            'id' : url.rsplit('/',1)[1],
+            'key' : 'direct'
+        }
+
+    
+    resp = scrapper.post(f'https://{urlparse(url).netloc}/post', headers=headers, data=data, cookies=cookies)
+
+    if directLogin==False:
+        driveUrl = resp['redirect']
+        return driveUrl
+    else:
+        try:
+            toJson = resp.json()
+            driveUrl = toJson['redirect']
+            return driveUrl
+        except:
+            if (len(SHAREDRIVE_PHPCKS)>0 and directLogin!=False):
+                shareDrive(url,directLogin=False)
+            else:
+                raise DirectDownloadLinkException('Direct Login is not there and you have not provided PHPCKS cookie value!!')

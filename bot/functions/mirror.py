@@ -37,7 +37,7 @@ from bot.helper.others.bot_utils import (
     is_unified_link,
     is_udrive_link,
     is_sharer_link,
-    is_drivehubs_link,
+    is_sharedrive_link,
     is_mega_link,
     is_gdrive_link,
     get_content_type,
@@ -386,7 +386,7 @@ def _mirror(
     is_unified = False
     is_udrive = False
     is_sharer = False
-    is_drivehubs = False
+    is_sharedrive = False
     
     try:
         link = message_args[1]
@@ -506,7 +506,7 @@ def _mirror(
                 is_unified = is_unified_link(link)
                 is_udrive = is_udrive_link(link)
                 is_sharer = is_sharer_link(link)
-                is_drivehubs = is_drivehubs_link(link)
+                is_sharedrive = is_sharedrive_link(link)
                 link = direct_link_generator(link)
                 LOGGER.info(f"Generated link: {link}")
             except DirectDownloadLinkException as e:
@@ -527,7 +527,7 @@ def _mirror(
             sendMessage(gmsg, bot, message)
         else:
             LOGGER.info(f"New Name: {name}")
-            Thread(target=add_gd_download, args=(link, listener, is_gdtot, is_unified, is_udrive, is_sharer, is_drivehubs, name)).start()
+            Thread(target=add_gd_download, args=(link, listener, is_gdtot, is_unified, is_udrive, is_sharer, is_sharedrive, name)).start()
 
     if multi > 1:
         sleep(3)
