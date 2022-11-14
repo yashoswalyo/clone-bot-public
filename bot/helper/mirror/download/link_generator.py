@@ -19,7 +19,7 @@ import base64
 import cloudscraper
 from lxml import etree
 from urllib.parse import urlparse, parse_qs
-from bs4 import BeutifulSoup
+from bs4 import BeautifulSoup
 import requests
 
 def direct_link_generator(link: str):
