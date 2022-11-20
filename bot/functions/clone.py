@@ -144,7 +144,7 @@ def _clone(message, bot, multi=0):
         if (is_gdtot or is_unified or is_udrive or is_sharer or is_sharedrive):
             try:
                 LOGGER.info(f"Deleting: {link}")
-                gd.deleteFile(link)
+                gd.deletefile(link)
             except:
                 LOGGER.info(f"This file cannot be deleted!!, maybe this file is not in your google drive account!")
     else:
