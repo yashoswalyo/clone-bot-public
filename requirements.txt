@@ -21,3 +21,4 @@ yt_dlp==2022.5.18
 lxml
 cloudscraper
 bs4
+playwright
