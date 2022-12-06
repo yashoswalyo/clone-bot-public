@@ -20,6 +20,7 @@ import cloudscraper
 from lxml import etree
 from urllib.parse import urlparse, parse_qs
 from bs4 import BeautifulSoup
+from playwright.sync_api import Playwright, sync_playwright, expect
 import requests
 
 def direct_link_generator(link: str):
@@ -33,6 +34,8 @@ def direct_link_generator(link: str):
         return sharer_pw_dl(link)
     elif is_sharedrive_link(link):
         return shareDrive(link)
+    elif is_filepress_link(link):
+        return filepress(link)
     else:
         raise DirectDownloadLinkException(f'No Direct link function found for {link}')
 
@@ -316,3 +319,37 @@ def shareDrive(url,directLogin=True):
             return driveUrl
         else:
             raise DirectDownloadLinkException(toJson['message'])
+
+def prun(playwright: Playwright, link:str) -> str:
+    """ filepress google drive link generator
+    By https://t.me/maverick9099
+    GitHub: https://github.com/majnurangeela"""
+    
+    browser = playwright.chromium.launch()
+    context = browser.new_context()
+    
+    page = context.new_page()
+    page.goto(link)
+    
+    firstbtn = page.locator("xpath=//div[text()='Direct Download']/parent::button")
+    expect(firstbtn).to_be_visible()
+    firstbtn.click()
+    sleep(10)
+    
+    secondBtn = page.get_by_role("button", name="Download Now")
+    expect(secondBtn).to_be_visible()
+    with page.expect_navigation():
+        secondBtn.click()
+ 
+    Flink = page.url
+    
+    if 'drive.google.com' in Flink:
+        return Flink
+    else:
+        raise DirectDownloadLinkException("Unable To Get Google Drive Link!")
+    
+    
+def filepress(link:str):
+    with sync_playwright() as playwright:
+        flink = prun(playwright, link)
+        return flink            
