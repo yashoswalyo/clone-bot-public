@@ -74,6 +74,23 @@ def editMessage(text: str, message: Message, reply_markup=None):
         LOGGER.error(str(e))
         return
 
+def sendSpeedTestMessage(text: str, bot, message: Message, link):
+    try:
+        return bot.sendPhoto(
+            chat_id=message.chat.id,
+            photo = link,
+            caption = text,
+            reply_to_message_id = message.message_id,
+            parse_mode="HTML",
+            filename = "speedrun.png"
+        )
+    except RetryAfter as r:
+        LOGGER.warning(str(r))
+        sleep(r.retry_after * 1.5)
+        return sendSpeedTestMessage(text, bot, message, link)
+    except Exception as e:
+        LOGGER.error(str(e))
+        return
 
 def deleteMessage(bot, message: Message):
     try:

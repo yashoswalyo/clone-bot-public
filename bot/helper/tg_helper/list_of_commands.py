@@ -35,5 +35,6 @@ class _BotCommands:
         self.ZipLeechCommand = f'zipleech{CMD_INDEX}'
         self.LeechWatchCommand = f'leechwatch{CMD_INDEX}'
         self.LeechZipWatchCommand = f'leechzipwatch{CMD_INDEX}'
+        self.SpeedTestCommand = f'speedtest{CMD_INDEX}'
         
 BotCommands = _BotCommands()

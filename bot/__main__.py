@@ -55,6 +55,7 @@ from .functions import (
     delete,
     count,
     leech_settings,
+    speedtst
 )
 
 
@@ -254,6 +255,7 @@ botcmds = [
     (f"{BotCommands.RestartCommand}", "Restart the bot"),
     (f"{BotCommands.LogCommand}", "Get the bot Log"),
     (f"{BotCommands.HelpCommand}", "Get detailed help"),
+    (f"{BotCommands.SpeedTestCommand}", "Run speedtest"),
 ]
 
 

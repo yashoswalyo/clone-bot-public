@@ -26,6 +26,10 @@ setdefaulttimeout(600)
 
 botStartTime = time()
 
+if ospath.exists('log.txt'):
+    with open('log.txt', 'w+') as f:
+        f.truncate(0)
+
 basicConfig(
     format="%(asctime)s - [%(filename)s:%(lineno)d] - %(levelname)s - %(message)s",
     handlers=[FileHandler("log.txt"), StreamHandler()],

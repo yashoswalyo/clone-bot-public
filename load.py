@@ -5,7 +5,7 @@ from logging import basicConfig, FileHandler, StreamHandler, INFO, error as log_
 from requests import get as rget
 
 if ospath.exists('log.txt'):
-    with open('log.txt', 'r+') as f:
+    with open('log.txt', 'w+') as f:
         f.truncate(0)
 
 basicConfig(

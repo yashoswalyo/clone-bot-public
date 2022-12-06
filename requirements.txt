@@ -22,3 +22,4 @@ lxml
 cloudscraper
 bs4
 playwright
+speedtest-cli
