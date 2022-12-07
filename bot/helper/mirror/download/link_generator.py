@@ -343,6 +343,9 @@ def prun(playwright: Playwright, link:str) -> str:
  
     Flink = page.url
     
+    context.close()
+    browser.close()
+    
     if 'drive.google.com' in Flink:
         return Flink
     else:
