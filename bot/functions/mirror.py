@@ -385,6 +385,7 @@ def _mirror(
     name_args = mesg[0].split("|", maxsplit=1)
     qbitsel = False
     is_gdtot = False
+    is_gdflix = False
     is_unified = False
     is_udrive = False
     is_sharer = False
