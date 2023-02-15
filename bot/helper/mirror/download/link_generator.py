@@ -396,7 +396,7 @@ def gdflix_bypass(playwright: Playwright, link):
     by @yashoswayo
     """
 
-    browser = playwright.chromium.launch(headless=False)
+    browser = playwright.chromium.launch()
 
     context = browser.new_context()
     try:
