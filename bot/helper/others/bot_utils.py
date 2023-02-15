@@ -276,7 +276,7 @@ def is_gdtot_link(url: str):
 
 def is_unified_link(url: str):
     url1 = re.match(r'https?://(anidrive|driveroot|driveflix|indidrive|drivehub)\.in/\S+', url)
-    url = re.match(r'https?://(appdrive|driveapp|driveace|gdflix|drivelinks|drivebit|drivesharer|drivepro)\.\S+', url)
+    url = re.match(r'https?://(appdrive|driveapp|driveace|drivelinks|drivebit|drivesharer|drivepro)\.\S+', url)
     if bool(url1) == True:
         return bool(url1)
     elif bool(url) == True:
@@ -302,6 +302,10 @@ def is_sharedrive_link(url: str):
 def is_filepress_link(url: str):
     url = re.match(r'https?://(filepress|filebee)\.\S+', url)
     return bool(url)
+
+def is_gdflix_link(url: str):
+  url = re.match(r'https?:\/\/(gdflix)\.\S+', url)
+  return bool(url)
 
 def is_mega_link(url: str):
     return "mega.nz" in url or "mega.co.nz" in url

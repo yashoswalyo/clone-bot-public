@@ -31,6 +31,7 @@ from bot import (
     INCOMPLETE_TASK_NOTIFIER,
 )
 from bot.helper.others.bot_utils import (
+    is_gdflix_link,
     is_url,
     is_magnet,
     is_gdtot_link,
@@ -505,6 +506,7 @@ def _mirror(
         if content_type is None or re_match(r'text/html|text/plain', content_type):
             try:
                 is_gdtot = is_gdtot_link(link)
+                is_gdflix = is_gdflix_link(link)
                 is_unified = is_unified_link(link)
                 is_udrive = is_udrive_link(link)
                 is_sharer = is_sharer_link(link)
@@ -530,7 +532,7 @@ def _mirror(
             sendMessage(gmsg, bot, message)
         else:
             LOGGER.info(f"New Name: {name}")
-            Thread(target=add_gd_download, args=(link, listener, is_gdtot, is_unified, is_udrive, is_sharer, is_sharedrive, is_filepress, name)).start()
+            Thread(target=add_gd_download, args=(link, listener, is_gdtot, is_gdflix, is_unified, is_udrive, is_sharer, is_sharedrive, is_filepress, name)).start()
 
     if multi > 1:
         sleep(3)

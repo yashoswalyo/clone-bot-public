@@ -16,7 +16,7 @@ from bot.helper.others.bot_utils import get_readable_file_size
 from bot.helper.others.fs_utils import get_base_name, check_storage_threshold
 
 
-def add_gd_download(link, listener, is_gdtot, is_unified, is_udrive, is_sharer, is_sharedrive, is_filepress, new_name=None):
+def add_gd_download(link, listener, is_gdtot, is_gdflix, is_unified, is_udrive, is_sharer, is_sharedrive, is_filepress, new_name=None):
     res, size, name, files = GoogleDriveHelper().helper(link)
     if res != "":
         return sendMessage(res, listener.bot, listener.message)
@@ -62,5 +62,5 @@ def add_gd_download(link, listener, is_gdtot, is_unified, is_udrive, is_sharer, 
     listener.onDownloadStart()
     sendStatusMessage(listener.message, listener.bot)
     drive.download(link,new_name)
-    if (is_gdtot or is_unified or is_udrive or is_sharer):
+    if (is_gdtot or is_unified or is_udrive or is_sharer or is_gdflix):
         drive.deletefile(link)
