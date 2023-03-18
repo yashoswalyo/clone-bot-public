@@ -389,6 +389,11 @@ def filepress(link: str):
         flink = prun(playwright, link)
         return flink
 
+def route_intercept(route):
+    if route.request.resource_type in {'script'}:
+        route.abort()
+    else:
+        route.continue_()
 
 def gdflix_bypass(playwright: Playwright, link):
     """
@@ -410,8 +415,8 @@ def gdflix_bypass(playwright: Playwright, link):
 
     page = context.new_page()
     ## Blocking sticky popups
-    page.route("https://inklinkor.com/tag.min.js", lambda route: route.abort())
-
+    # page.route("https://inklinkor.com/tag.min.js", lambda route: route.abort())
+    page.route("**/*", route_intercept)
     page.goto(link)
 
     drc = page.locator("#drc")
@@ -421,52 +426,55 @@ def gdflix_bypass(playwright: Playwright, link):
         print("Direct Download")
         with page.expect_navigation():
             drc.click()
+        drive_link = page.locator("xpath=/html/body/div/div/div[2]/div/div/a").get_attribute("href")
+        
 
-    elif ddl.is_visible():
-        print("Trying with cookies")
-        with page.expect_navigation():
-            ddl.click()
+    # elif ddl.is_visible():
+    #     print("Trying with cookies")
+    #     with page.expect_navigation():
+    #         ddl.click()
 
-    else:
-        try:
-            print("Trying with login")
-            page.goto("https://gdflix.lol/login")
+    # else:
+    #     try:
+    #         print("Trying with login")
+    #         page.goto("https://gdflix.lol/login")
 
-            email = page.locator("#form1Example1")
-            email.type(UNIFIED_EMAIL)
+    #         email = page.locator("#form1Example1")
+    #         email.type(UNIFIED_EMAIL)
 
-            passwd = page.locator("#form1Example2")
-            passwd.type(UNIFIED_PASS)
+    #         passwd = page.locator("#form1Example2")
+    #         passwd.type(UNIFIED_PASS)
 
-            name = page.locator("//iframe[@title='reCAPTCHA']").get_attribute("name")
-            recaptcha = page.frame(name=name)
+    #         name = page.locator("//iframe[@title='reCAPTCHA']").get_attribute("name")
+    #         recaptcha = page.frame(name=name)
 
-            # solve simple captchas
-            recaptcha.click("//div[@class='recaptcha-checkbox-border']")
-            page.wait_for_timeout(2000)
-            s = recaptcha.locator("//span[@id='recaptcha-anchor']")
-            if s.get_attribute("aria-checked") != "false":  # solved already
-                print("solved")
+    #         # solve simple captchas
+    #         recaptcha.click("//div[@class='recaptcha-checkbox-border']")
+    #         page.wait_for_timeout(2000)
+    #         s = recaptcha.locator("//span[@id='recaptcha-anchor']")
+    #         if s.get_attribute("aria-checked") != "false":  # solved already
+    #             print("solved")
 
-            loginbtn = page.locator("//*[@id='signin']")
-            with page.expect_navigation():
-                loginbtn.click()
+    #         loginbtn = page.locator("//*[@id='signin']")
+    #         with page.expect_navigation():
+    #             loginbtn.click()
 
-            page.goto(link)
+    #         page.goto(link)
 
-            ddl = page.locator("#ddl")
+    #         ddl = page.locator("#ddl")
 
-            if ddl.is_visible():
-                print("Trying to get gdrive link")
-                with page.expect_navigation():
-                    ddl.click()
-        except:
-            raise DirectDownloadLinkException("Failed to login, try after some time")
+    #         if ddl.is_visible():
+    #             print("Trying to get gdrive link")
+    #             with page.expect_navigation():
+    #                 ddl.click()
+    #     except:
+    #         raise DirectDownloadLinkException("Failed to login, try after some time")
+    
     c = context.cookies()
     json.dump(c, open("gdflix_cookie.json", "w"), indent=2)
     context.close()
     browser.close()
-    return page.url
+    return drive_link
 
 
 def gdflix(link):
