@@ -1,6 +1,4 @@
 from bot import (
-    GDFLIX_MD,
-    GDFLIX_TOKEN,
     UNIFIED_EMAIL,
     UNIFIED_PASS,
     GDTOT_CRYPT,
@@ -10,6 +8,7 @@ from bot import (
     XSRF_TOKEN,
     laravel_session,
     SHAREDRIVE_PHPCKS,
+    LOGGER
 )
 from bot.helper.others.bot_utils import *
 from bot.helper.others.exceptions import DirectDownloadLinkException
@@ -27,28 +26,28 @@ from bs4 import BeautifulSoup
 from playwright.sync_api import Playwright, sync_playwright, expect
 import requests
 
-gdflix_cookies = [
-    {
-        "name": "MD",
-        "value": GDFLIX_MD,
-        "domain": "gdflix.lol",
-        "path": "/",
-        # "expires": 1707999300.088912,
-        # "httpOnly": False,
-        # "secure": True,
-        # "sameSite": "Lax"
-    },
-    {
-        "name": "_token",
-        "value": GDFLIX_TOKEN,
-        "domain": "gdflix.lol",
-        "path": "/",
-        # "expires": 1678882500.088982,
-        # "httpOnly": False,
-        # "secure": True,
-        # "sameSite": "Lax"
-    },
-]
+# gdflix_cookies = [
+#     {
+#         "name": "MD",
+#         "value": GDFLIX_MD,
+#         "domain": "gdflix.lol",
+#         "path": "/",
+#         # "expires": 1707999300.088912,
+#         # "httpOnly": False,
+#         # "secure": True,
+#         # "sameSite": "Lax"
+#     },
+#     {
+#         "name": "_token",
+#         "value": GDFLIX_TOKEN,
+#         "domain": "gdflix.lol",
+#         "path": "/",
+#         # "expires": 1678882500.088982,
+#         # "httpOnly": False,
+#         # "secure": True,
+#         # "sameSite": "Lax"
+#     },
+# ]
 
 
 def direct_link_generator(link: str):
@@ -70,32 +69,69 @@ def direct_link_generator(link: str):
         raise DirectDownloadLinkException(f"No Direct link function found for {link}")
 
 
-def gdtot(url: str) -> str:
-    if GDTOT_CRYPT is None:
-        raise DirectDownloadLinkException("GDTOT_CRYPT env var not provided")
+def gdtot(url: str) -> str:    
     client = requests.Session()
-    client.cookies.update({"crypt": GDTOT_CRYPT})
-    res = client.get(url)
-    base_url = re.match("^.+?[^\/:](?=[?\/]|$\n)", url).group(0)
-    res = client.get(f"{base_url}/dld?id={url.split('/')[-1]}")
-    url = re.findall(r'URL=(.*?)"', res.text)[0]
-    info = {}
-    info["error"] = False
-    params = parse_qs(urlparse(url).query)
-    if "gd" not in params or not params["gd"] or params["gd"][0] == "false":
-        info["error"] = True
-        if "msgx" in params:
-            info["message"] = params["msgx"][0]
+    # client.cookies.update({"crypt": GDTOT_CRYPT})
+    try:
+        # direct download from gdtot
+        url = client.get(url).url
+        p_url = urlparse(url)
+        res = client.get(f"{p_url.scheme}://{p_url.hostname}/ddl/{url.split('/')[-1]}")
+    except Exception as e:
+        LOGGER.info(f'ERROR: {e.__class__.__name__}')
+
+    if (drive_link := re.findall(r"myDl\('(.*?)'\)", res.text)) and "drive.google.com" in drive_link[0]:
+        return drive_link[0]
+
+    try:
+        # download from gdflix via gdbot
+        res = client.get( f"https://gdbot.xyz/file/{url.split('/')[-1]}")
+    except Exception as e:
+        LOGGER.info(f"Error: {e.__class__.__name__}")
+
+    token_url = etree.HTML(res.content).xpath("//a[contains(@class,'inline-flex items-center justify-center')]/@href")[0]
+    try:
+        token_page = client.get(token_url)
+    except Exception as e:
+        LOGGER.info(f'ERROR: {e.__class__.__name__} with {token_url}')
+            
+    path = re.findall('\("(.*?)"\)', token_page.text)
+    if not path:
+        LOGGER.info('ERROR: Cannot bypass this')
+    path = path[0]
+    raw = urlparse(token_url)
+    final_url = f'{raw.scheme}://{raw.hostname}{path}'
+    if 'gdflix.lol' in final_url:
+        return gdflix(final_url)
+
+    else:
+        # fallback to old method
+        if GDTOT_CRYPT is None:
+            raise DirectDownloadLinkException("GDTOT_CRYPT env var not provided")
+
+        client.cookies.update({"crypt": GDTOT_CRYPT})
+        url = client.get(url).url
+        p_url = urlparse(url)
+        res = client.get(f"{p_url.scheme}://{p_url.hostname}/dld?id={url.split('/')[-1]}")
+        
+        url = re.findall(r'URL=(.*?)"', res.text)[0]
+        info = {}
+        info["error"] = False
+        params = parse_qs(urlparse(url).query)
+        if "gd" not in params or not params["gd"] or params["gd"][0] == "false":
+            info["error"] = True
+            if "msgx" in params:
+                info["message"] = params["msgx"][0]
+            else:
+                info["message"] = "Invalid link"
         else:
-            info["message"] = "Invalid link"
-    else:
-        decoded_id = base64.b64decode(str(params["gd"][0])).decode("utf-8")
-        drive_link = f"https://drive.google.com/open?id={decoded_id}"
-        info["gdrive_link"] = drive_link
-    if not info["error"]:
-        return info["gdrive_link"]
-    else:
-        raise DirectDownloadLinkException(f"{info['message']}")
+            decoded_id = base64.b64decode(str(params["gd"][0])).decode("utf-8")
+            drive_link = f"https://drive.google.com/open?id={decoded_id}"
+            info["gdrive_link"] = drive_link
+        if not info["error"]:
+            return info["gdrive_link"]
+        else:
+            LOGGER.info(f"{info['message']}")
 
 
 account = {"email": UNIFIED_EMAIL, "passwd": UNIFIED_PASS}
@@ -404,14 +440,14 @@ def gdflix_bypass(playwright: Playwright, link):
     browser = playwright.chromium.launch()
 
     context = browser.new_context()
-    try:
-        if os.path.exists("gdflix_cookie.json"):
-            cookies = json.load(open("gdflix_cookie.json", "r"))
-            context.add_cookies(cookies)
-        else:
-            context.add_cookies(gdflix_cookies)
-    except:
-        context.add_cookies(gdflix_cookies)
+    # try:
+    #     if os.path.exists("gdflix_cookie.json"):
+    #         cookies = json.load(open("gdflix_cookie.json", "r"))
+    #         context.add_cookies(cookies)
+    #     else:
+    #         context.add_cookies(gdflix_cookies)
+    # except:
+    #     context.add_cookies(gdflix_cookies)
 
     page = context.new_page()
     ## Blocking sticky popups
@@ -423,7 +459,7 @@ def gdflix_bypass(playwright: Playwright, link):
     ddl = page.locator("#ddl")
 
     if drc.is_visible():
-        print("Direct Download")
+        LOGGER.info("Direct Download")
         with page.expect_navigation():
             drc.click()
         drive_link = page.locator("xpath=/html/body/div/div/div[2]/div/div/a").get_attribute("href")
@@ -433,7 +469,6 @@ def gdflix_bypass(playwright: Playwright, link):
     #     print("Trying with cookies")
     #     with page.expect_navigation():
     #         ddl.click()
-
     # else:
     #     try:
     #         print("Trying with login")
@@ -469,9 +504,9 @@ def gdflix_bypass(playwright: Playwright, link):
     #                 ddl.click()
     #     except:
     #         raise DirectDownloadLinkException("Failed to login, try after some time")
-    
-    c = context.cookies()
-    json.dump(c, open("gdflix_cookie.json", "w"), indent=2)
+    # c = context.cookies()
+    # json.dump(c, open("gdflix_cookie.json", "w"), indent=2)
+
     context.close()
     browser.close()
     return drive_link
