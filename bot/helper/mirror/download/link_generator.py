@@ -458,6 +458,7 @@ def gdflix_bypass(playwright: Playwright, link):
     drc = page.locator("#drc")
     ddl = page.locator("#ddl")
 
+    drive_link = ""
     if drc.is_visible():
         LOGGER.info("Direct Download")
         with page.expect_navigation():
