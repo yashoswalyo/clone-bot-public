@@ -463,7 +463,7 @@ def gdflix_bypass(playwright: Playwright, link):
         LOGGER.info("Direct Download")
         with page.expect_navigation():
             drc.click()
-        drive_link = page.locator("xpath=/html/body/div/div/div[2]/div/div/a").get_attribute("href")
+        drive_link = page.locator("xpath=/html/body/div[1]/div/div[2]/div/div/a[1]").get_attribute("href")
         
 
     # elif ddl.is_visible():
